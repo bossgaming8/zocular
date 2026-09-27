@@ -1,0 +1,46 @@
+{
+	"schemaVersion": 1,
+	"id": "zocular",
+	"version": "${version}",
+	"name": "Zocular",
+	"description": "Smooth zoom, a film-style cinematic camera, freecam and keyframed camera paths.",
+	"authors": [
+		"Bhored"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/zocular",
+		"sources": "https://github.com/bossgaming8/zocular",
+		"issues": "https://github.com/bossgaming8/zocular/issues"
+	},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/zocular/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"dev.bhored.zocular.Zocular"
+		],
+		"modmenu": [
+			"dev.bhored.zocular.compat.ModMenuEntry"
+		]
+	},
+	"mixins": [
+		"zocular.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	},
+	"custom": {
+		"modmenu": {
+			"links": {
+				"zocular.link.discord": "https://discord.gg/bananasandwich",
+				"zocular.link.donate": "https://www.paypal.com/paypalme/BhoredM"
+			}
+		}
+	}
+}

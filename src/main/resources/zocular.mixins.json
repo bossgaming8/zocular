@@ -1,0 +1,16 @@
+{
+	"required": true,
+	"package": "dev.bhored.zocular.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CameraMixin",
+		"GameRendererMixin",
+		"KeyboardInputMixin",
+		"LivingEntityRendererMixin",
+		"MinecraftMixin",
+		"MouseHandlerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
