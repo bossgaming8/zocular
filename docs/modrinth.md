@@ -46,11 +46,11 @@ Everything lives in one settings screen: open it from Mod Menu, type `/zocular`,
 
 | Action | Default key |
 |---|---|
-| Zoom (hold, scroll to adjust) | Z |
-| Cinematic camera | I |
-| Next shot | R |
-| Freecam | K |
-| Roll left / right / level | [ / ] / \ |
+| Zoom (hold, scroll to adjust) | `Z` |
+| Cinematic camera | `I` |
+| Next shot | `R` |
+| Freecam | `K` |
+| Roll left / right / level | `[` / `]` / `\` |
 | Switch shoulder | not bound |
 | Open settings | not bound, or `/zocular` |
 
