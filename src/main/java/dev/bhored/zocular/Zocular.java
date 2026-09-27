@@ -30,6 +30,7 @@ public final class Zocular implements ClientModInitializer {
 	public static final String DONATE_URL = "https://www.paypal.com/paypalme/BhoredM";
 
 	private static @Nullable Function<Screen, Screen> pendingScreen;
+	private static boolean keysChecked;
 
 	@Override
 	public void onInitializeClient() {
@@ -54,6 +55,11 @@ public final class Zocular implements ClientModInitializer {
 	}
 
 	private static void tick(Minecraft minecraft) {
+		if (!keysChecked) {
+			// Key bindings are only read from options.txt after mods initialize, so this waits for the first tick.
+			keysChecked = true;
+			Keybinds.migrateOldDefaults(minecraft);
+		}
 		if (pendingScreen != null) {
 			minecraft.gui.setScreen(pendingScreen.apply(minecraft.gui.screen()));
 			pendingScreen = null;

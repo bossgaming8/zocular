@@ -21,7 +21,11 @@ public final class ZocularConfig {
 	private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("zocular.json");
 
 	public static final ZocularConfig DEFAULTS = new ZocularConfig();
+	/** Bumped whenever default key bindings change, so older bindings can be moved over once. */
+	public static final int KEY_LAYOUT = 2;
 	private static ZocularConfig current = new ZocularConfig();
+
+	public Integer keyLayout;
 
 	public Zoom zoom = new Zoom();
 	public Cinematic cinematic = new Cinematic();
@@ -36,7 +40,8 @@ public final class ZocularConfig {
 	}
 
 	public static void load() {
-		if (Files.isRegularFile(FILE)) {
+		boolean existed = Files.isRegularFile(FILE);
+		if (existed) {
 			try (Reader reader = Files.newBufferedReader(FILE)) {
 				ZocularConfig loaded = GSON.fromJson(reader, ZocularConfig.class);
 				if (loaded != null) {
@@ -48,6 +53,9 @@ public final class ZocularConfig {
 		}
 
 		current.fillMissingSections();
+		if (!existed) {
+			current.keyLayout = KEY_LAYOUT;
+		}
 		Settings.sanitize();
 		save();
 	}

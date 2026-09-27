@@ -84,5 +84,3 @@ Zocular is made by Bhored from **Banana Sandwich SMP**, a mature (18+), Hermitcr
 ---
 
 Found a bug or have an idea? [Open an issue on GitHub](https://github.com/bossgaming8/zocular/issues). If you'd like to support development, you can [donate through PayPal](https://www.paypal.com/paypalme/BhoredM).
-
-<sub>Zocular 2.0 is a from-scratch rewrite. The older 1.x releases were built on Zume by Nolij (OSL-3.0).</sub>

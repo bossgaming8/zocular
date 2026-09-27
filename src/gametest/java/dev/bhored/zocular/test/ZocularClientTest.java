@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.CameraType;
 import net.minecraft.world.phys.Vec3;
 
@@ -28,6 +29,7 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		TestInput input = context.getInput();
 		input.resizeWindow(1920, 1080);
 		context.waitTicks(2);
+		checkDefaultKeys(context);
 
 		settingsPages(context, "title");
 		compactLayout(context, input);
@@ -219,6 +221,14 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		check(!context.computeOnClient(minecraft -> ZocularConfig.get().hud.positions.containsKey("zoom")), "right-click should reset it");
 		input.pressKey(InputConstants.KEY_ESCAPE);
 		context.waitTicks(2);
+	}
+
+	/** Bindings left on the 2.0 defaults (Z and K) are moved to C and F4 on the first tick. */
+	private static void checkDefaultKeys(ClientGameTestContext context) {
+		int zoom = context.computeOnClient(minecraft -> KeyMappingHelper.getBoundKeyOf(Keybinds.ZOOM).getValue());
+		int freecam = context.computeOnClient(minecraft -> KeyMappingHelper.getBoundKeyOf(Keybinds.FREECAM).getValue());
+		check(zoom == InputConstants.KEY_C, "zoom should be bound to C, got " + zoom);
+		check(freecam == InputConstants.KEY_F4, "freecam should be bound to F4, got " + freecam);
 	}
 
 	private static void check(boolean condition, String message) {
