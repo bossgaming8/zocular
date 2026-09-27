@@ -116,7 +116,7 @@ public final class ShowcaseRecorder implements FabricClientGameTest {
 			config.duration = RECORD_SECONDS;
 			config.ease = false;
 			config.constantSpeed = true;
-			config.letterbox = true;
+			config.letterbox = false;
 			config.hideHud = true;
 
 			KeyframePath path = CameraControl.get().path();

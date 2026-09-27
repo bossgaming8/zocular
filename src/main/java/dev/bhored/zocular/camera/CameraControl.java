@@ -4,6 +4,7 @@ import dev.bhored.zocular.Keybinds;
 import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.compat.IrisShaders;
 import dev.bhored.zocular.config.ZocularConfig;
+import dev.bhored.zocular.config.ZocularConfig.PanelMode;
 import dev.bhored.zocular.config.ZocularConfig.ShaderMode;
 import dev.bhored.zocular.hud.Notices;
 import dev.bhored.zocular.util.Keys;
@@ -86,6 +87,12 @@ public final class CameraControl {
 		}
 		while (Keybinds.ROLL_RESET.consumeClick()) {
 			levellingRoll = true;
+		}
+		while (Keybinds.FREECAM_PANEL.consumeClick()) {
+			if (mode == Mode.FREECAM) {
+				ZocularConfig.Hud hud = ZocularConfig.get().hud;
+				hud.freecamPanel = hud.freecamPanel == PanelMode.FULL ? PanelMode.COMPACT : PanelMode.FULL;
+			}
 		}
 		while (Keybinds.SHOULDER.consumeClick()) {
 			ZocularConfig.ThirdPerson thirdPerson = ZocularConfig.get().thirdPerson;
@@ -362,6 +369,23 @@ public final class CameraControl {
 			}
 			hidHud = false;
 		}
+	}
+
+	/** True while freecam or the cinematic camera is placing the camera. */
+	public boolean isActive() {
+		return mode != Mode.NONE;
+	}
+
+	/**
+	 * The field of view to render with. Cinematic shots use their own lens, and neither mode lets sprinting or
+	 * flying change the FOV, which would make a detached camera pump in and out.
+	 */
+	public float fov(float vanilla) {
+		return switch (mode) {
+			case NONE -> vanilla;
+			case FREECAM -> Minecraft.getInstance().options.fov().get();
+			case CINEMATIC -> Mth.lerp(Motion.easeInOut(blend), vanilla, ZocularConfig.get().cinematic.fov);
+		};
 	}
 
 	/** Mouse look goes to the free camera instead of the player. */

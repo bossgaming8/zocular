@@ -38,6 +38,7 @@
 	"custom": {
 		"modmenu": {
 			"links": {
+				"zocular.link.website": "https://www.bananasandwich.us",
 				"zocular.link.discord": "https://discord.gg/bananasandwich",
 				"zocular.link.donate": "https://www.paypal.com/paypalme/BhoredM"
 			}

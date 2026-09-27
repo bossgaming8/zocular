@@ -85,8 +85,8 @@ public abstract class CameraMixin {
 	}
 
 	@ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
-	private float zocular$zoom(float fov) {
-		return isPanoramicMode ? fov : fov * Zoom.fovScale();
+	private float zocular$fov(float fov) {
+		return isPanoramicMode ? fov : CameraControl.get().fov(fov) * Zoom.fovScale();
 	}
 
 	private boolean isMainCamera() {

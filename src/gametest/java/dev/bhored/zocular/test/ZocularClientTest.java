@@ -6,6 +6,7 @@ import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.camera.CameraControl;
 import dev.bhored.zocular.config.Settings;
 import dev.bhored.zocular.config.ZocularConfig;
+import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.gui.SettingsScreen;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
@@ -46,6 +47,7 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			freecamAndPath(context, input);
 			cinematic(context, input);
 			shoulder(context, input);
+			hudEditor(context, input);
 			settingsPages(context, "ingame");
 		}
 	}
@@ -127,6 +129,14 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		context.waitTicks(5);
 		context.takeScreenshot("freecam");
 
+		input.pressKey(Keybinds.FREECAM_PANEL);
+		context.waitTicks(2);
+		check(ZocularConfig.get().hud.freecamPanel == ZocularConfig.PanelMode.COMPACT, "the panel key should collapse the freecam panel");
+		context.takeScreenshot("freecam-compact");
+		input.pressKey(Keybinds.FREECAM_PANEL);
+		context.waitTicks(2);
+		check(ZocularConfig.get().hud.freecamPanel == ZocularConfig.PanelMode.FULL, "the panel key should expand it again");
+
 		Vec3 playerAfter = context.computeOnClient(minecraft -> minecraft.player.position());
 		check(playerAfter.distanceTo(playerBefore) < 0.01, "the player must stay put while freecam moves");
 		check(CameraControl.get().path().size() == 3, "three keyframes should be recorded");
@@ -157,6 +167,9 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		context.takeScreenshot("cinematic-next-shot");
 
+		input.holdKeyFor(options -> options.keyUp, 40);
+		context.takeScreenshot("cinematic-walking");
+
 		input.pressKey(Keybinds.CINEMATIC);
 		context.waitTicks(45);
 		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "cinematic camera should have finished leaving");
@@ -175,6 +188,37 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			ZocularConfig.get().thirdPerson.shoulder = ZocularConfig.Shoulder.CENTER;
 			minecraft.options.setCameraType(CameraType.FIRST_PERSON);
 		});
+	}
+
+	private static void hudEditor(ClientGameTestContext context, TestInput input) {
+		context.setScreen(() -> new HudEditorScreen(null));
+		context.waitTicks(4);
+		context.takeScreenshot("hud-editor");
+
+		// Drag the zoom indicator from the top right corner to the top middle.
+		int[] gui = context.computeOnClient(minecraft -> new int[] {
+			minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getScreenWidth()
+		});
+		double scale = gui[1] / (double) gui[0];
+		input.setCursorPos((gui[0] - 14) * scale, 12 * scale);
+		input.holdMouse(InputConstants.MOUSE_BUTTON_LEFT);
+		context.waitTick();
+		for (int i = 0; i < 10; i++) {
+			input.moveCursor(-(gui[0] / 2.0 - 30) * scale / 10.0, 2 * scale);
+			context.waitTick();
+		}
+		input.releaseMouse(InputConstants.MOUSE_BUTTON_LEFT);
+		context.waitTicks(2);
+		ZocularConfig.HudPosition moved = context.computeOnClient(minecraft -> ZocularConfig.get().hud.positions.get("zoom"));
+		check(moved != null && moved.anchor == ZocularConfig.Anchor.TOP, "dragging should move the zoom indicator to the top middle, got "
+			+ (moved == null ? "nothing" : moved.anchor));
+		context.takeScreenshot("hud-editor-moved");
+
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(2);
+		check(!context.computeOnClient(minecraft -> ZocularConfig.get().hud.positions.containsKey("zoom")), "right-click should reset it");
+		input.pressKey(InputConstants.KEY_ESCAPE);
+		context.waitTicks(2);
 	}
 
 	private static void check(boolean condition, String message) {

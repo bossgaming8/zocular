@@ -10,7 +10,9 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.chat.Component;
 
@@ -71,6 +73,8 @@ public final class ZocularConfig {
 		if (thirdPerson == null) thirdPerson = new ThirdPerson();
 		if (roll == null) roll = new Roll();
 		if (hud == null) hud = new Hud();
+		if (hud.positions == null) hud.positions = new LinkedHashMap<>();
+		hud.positions.values().removeIf(position -> position == null || position.anchor == null);
 	}
 
 	public static final class Zoom {
@@ -87,13 +91,15 @@ public final class ZocularConfig {
 	}
 
 	public static final class Cinematic {
-		public ShotStyle style = ShotStyle.TRIPOD;
-		public float distance = 9.0F;
-		public float height = 2.5F;
+		public ShotStyle style = ShotStyle.AUTO;
+		public float shotLength = 9.0F;
+		public Reframe reframe = Reframe.CUT;
+		public float distance = 7.0F;
+		public float height = 1.5F;
+		public float fov = 55.0F;
 		public float orbitSpeed = 8.0F;
 		public float followSmoothing = 0.5F;
 		public float reframeAngle = 26.0F;
-		public Reframe reframe = Reframe.GLIDE;
 		public float transitionMs = 1200.0F;
 		public float letterbox = 0.12F;
 		public Vignette vignette = Vignette.SUBTLE;
@@ -134,9 +140,41 @@ public final class ZocularConfig {
 
 	public static final class Hud {
 		public boolean zoomIndicator = true;
-		public boolean freecamPanel = true;
-		public boolean hints = true;
+		public PanelMode freecamPanel = PanelMode.FULL;
+		public boolean pathTimeline = true;
 		public boolean notices = true;
+		public Map<String, HudPosition> positions = new LinkedHashMap<>();
+	}
+
+	/** Where a HUD element sits: a corner, edge or the center of the screen, plus an offset from it. */
+	public static final class HudPosition {
+		public Anchor anchor;
+		public int x;
+		public int y;
+
+		public HudPosition(Anchor anchor, int x, int y) {
+			this.anchor = anchor;
+			this.x = x;
+			this.y = y;
+		}
+	}
+
+	public enum Anchor {
+		TOP_LEFT(0, 0), TOP(1, 0), TOP_RIGHT(2, 0),
+		LEFT(0, 1), CENTER(1, 1), RIGHT(2, 1),
+		BOTTOM_LEFT(0, 2), BOTTOM(1, 2), BOTTOM_RIGHT(2, 2);
+
+		public final int column;
+		public final int row;
+
+		Anchor(int column, int row) {
+			this.column = column;
+			this.row = row;
+		}
+
+		public static Anchor of(int column, int row) {
+			return values()[row * 3 + column];
+		}
 	}
 
 	public interface Labeled {
@@ -153,7 +191,11 @@ public final class ZocularConfig {
 	}
 
 	public enum ShotStyle implements Labeled {
-		TRIPOD, CHASE, ORBIT
+		AUTO, TRIPOD, CHASE, SIDE, ORBIT
+	}
+
+	public enum PanelMode implements Labeled {
+		FULL, COMPACT, HIDDEN
 	}
 
 	public enum Reframe implements Labeled {

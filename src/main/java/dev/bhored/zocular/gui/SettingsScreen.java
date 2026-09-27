@@ -32,7 +32,8 @@ public final class SettingsScreen extends Screen {
 	private static final int CONTROL_WIDTH = 100;
 	private static final int FOOTER_BUTTON_WIDTH = 74;
 
-	private static final List<Link> LINKS = List.of(
+	private static final Link WEBSITE = new Link("website", Zocular.id("icon/globe"), URI.create(Zocular.WEBSITE_URL));
+	private static final List<Link> ICON_LINKS = List.of(
 		new Link("discord", Zocular.id("icon/discord"), URI.create(Zocular.DISCORD_URL)),
 		new Link("issues", Zocular.id("icon/bug"), URI.create(Zocular.ISSUES_URL)),
 		new Link("donate", Zocular.id("icon/heart"), URI.create(Zocular.DONATE_URL))
@@ -124,6 +125,7 @@ public final class SettingsScreen extends Screen {
 			case Settings.Heading heading -> new HeadingRow(heading.text(), first);
 			case Settings.Note note -> new NoteRow(note.text());
 			case Settings.Binding binding -> new BindingRow(binding.mapping());
+			case Settings.Action action -> new ActionRow(action);
 		};
 	}
 
@@ -211,16 +213,33 @@ public final class SettingsScreen extends Screen {
 			itemY += 22;
 		}
 
-		if (!linksVisible()) {
-			return;
+		int[] caption = footerRow(3);
+		if (caption != null) {
+			graphics.text(font, Component.translatable("zocular.link.server"), caption[0], caption[1] + 2, Theme.TEXT_FAINT, false);
 		}
-		int linkY = panelY + panelHeight - LINKS.size() * 13 - 8;
-		for (Link link : LINKS) {
-			boolean hover = inside(mouseX, mouseY, panelX + 10, linkY - 2, sidebarWidth - 20, 12);
-			int color = hover ? Theme.TEXT : Theme.TEXT_FAINT;
-			Theme.sprite(graphics, link.icon(), panelX + 13, linkY, 9, 9, hover ? Theme.ACCENT : Theme.TEXT_FAINT);
-			graphics.text(font, link.label(), panelX + 26, linkY + 1, color, false);
-			linkY += 13;
+		int[] site = footerRow(2);
+		if (site != null) {
+			Component label = WEBSITE.label();
+			boolean hover = inside(mouseX, mouseY, site[0], site[1], 14 + font.width(label), 12);
+			int color = hover ? Theme.ACCENT_BRIGHT : Theme.ACCENT;
+			Theme.sprite(graphics, WEBSITE.icon(), site[0], site[1] + 1, 9, 9, color);
+			graphics.text(font, label, site[0] + 13, site[1] + 2, color, false);
+			if (hover) {
+				graphics.fill(site[0] + 13, site[1] + 11, site[0] + 13 + font.width(label), site[1] + 12, color);
+			}
+		}
+		for (int i = 0; i < ICON_LINKS.size(); i++) {
+			int[] box = iconLink(i);
+			if (box == null) {
+				break;
+			}
+			Link link = ICON_LINKS.get(i);
+			boolean hover = inside(mouseX, mouseY, box[0], box[1], 17, 17);
+			if (hover) {
+				Theme.box(graphics, box[0], box[1], 17, 17, Theme.SURFACE_HOVER);
+				graphics.setTooltipForNextFrame(font, link.label(), mouseX, mouseY);
+			}
+			Theme.sprite(graphics, link.icon(), box[0] + 4, box[1] + 4, 9, 9, hover ? Theme.ACCENT : Theme.TEXT_MUTED);
 		}
 	}
 
@@ -239,9 +258,22 @@ public final class SettingsScreen extends Screen {
 		graphics.fill(contentX, listTop - 4, contentX + contentWidth, listTop - 3, Theme.BORDER);
 	}
 
-	private boolean linksVisible() {
+	/**
+	 * The sidebar footer, from the bottom up: a row of icon links (row 1), the website (row 2) and a caption
+	 * (row 3). Rows that don't fit under the page list are left out. Returns the row's top-left corner or null.
+	 */
+	private int @Nullable [] footerRow(int row) {
+		if (compact) {
+			return null;
+		}
 		int pagesEnd = panelY + 46 + Settings.PAGES.size() * 22;
-		return !compact && panelY + panelHeight - LINKS.size() * 13 - 12 > pagesEnd;
+		int y = panelY + panelHeight - 24 - (row - 1) * 13 - (row > 1 ? 4 : 0);
+		return y > pagesEnd + 2 ? new int[] {panelX + 12, y} : null;
+	}
+
+	private int @Nullable [] iconLink(int index) {
+		int[] row = footerRow(1);
+		return row == null ? null : new int[] {row[0] - 3 + index * 20, row[1]};
 	}
 
 	private int closeX() {
@@ -347,15 +379,18 @@ public final class SettingsScreen extends Screen {
 			itemY += 22;
 		}
 
-		if (linksVisible()) {
-			int linkY = panelY + panelHeight - LINKS.size() * 13 - 8;
-			for (Link link : LINKS) {
-				if (inside(mouseX, mouseY, panelX + 10, linkY - 2, sidebarWidth - 20, 12)) {
-					playClickSound();
-					ConfirmLinkScreen.confirmLinkNow(this, link.uri());
-					return true;
-				}
-				linkY += 13;
+		int[] site = footerRow(2);
+		if (site != null && inside(mouseX, mouseY, site[0], site[1], 14 + font.width(WEBSITE.label()), 12)) {
+			playClickSound();
+			ConfirmLinkScreen.confirmLinkNow(this, WEBSITE.uri());
+			return true;
+		}
+		for (int i = 0; i < ICON_LINKS.size(); i++) {
+			int[] box = iconLink(i);
+			if (box != null && inside(mouseX, mouseY, box[0], box[1], 17, 17)) {
+				playClickSound();
+				ConfirmLinkScreen.confirmLinkNow(this, ICON_LINKS.get(i).uri());
+				return true;
 			}
 		}
 
@@ -699,6 +734,41 @@ public final class SettingsScreen extends Screen {
 			boolean backwards = button == InputConstants.MOUSE_BUTTON_RIGHT || onLeftArrow;
 			setting.cycle(backwards ? -1 : 1);
 			playClickSound();
+			return true;
+		}
+	}
+
+	private final class ActionRow extends Row {
+		private final Settings.Action action;
+
+		ActionRow(Settings.Action action) {
+			this.action = action;
+		}
+
+		@Override
+		int height() {
+			return ROW_HEIGHT;
+		}
+
+		@Override
+		Component description() {
+			return action.description();
+		}
+
+		@Override
+		void draw(GuiGraphicsExtractor graphics, int x, int y, int width, int mouseX, int mouseY, float alpha, float dt) {
+			background(graphics, x, y, width, alpha);
+			graphics.text(font, action.name(), x + 9, y + 8, Theme.fade(Theme.TEXT, alpha), false);
+			int buttonX = x + width - CONTROL_WIDTH - 6;
+			boolean hoverButton = inside(mouseX, mouseY, buttonX, y + 4, CONTROL_WIDTH, 16);
+			Theme.box(graphics, buttonX, y + 4, CONTROL_WIDTH, 16, Theme.fade(hoverButton ? Theme.ACCENT_BRIGHT : Theme.ACCENT, alpha));
+			graphics.centeredText(font, Component.translatable("zocular.settings.open"), buttonX + CONTROL_WIDTH / 2, y + 8, Theme.fade(Theme.ON_ACCENT, alpha));
+		}
+
+		@Override
+		boolean click(double mouseX, double mouseY, int x, int y, int width, int button) {
+			playClickSound();
+			minecraft.gui.setScreen(action.screen().apply(SettingsScreen.this));
 			return true;
 		}
 	}

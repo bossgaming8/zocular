@@ -3,7 +3,9 @@ package dev.bhored.zocular.config;
 import dev.bhored.zocular.Keybinds;
 import dev.bhored.zocular.Zocular;
 import dev.bhored.zocular.compat.IrisShaders;
+import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.config.ZocularConfig.Labeled;
+import dev.bhored.zocular.config.ZocularConfig.PanelMode;
 import dev.bhored.zocular.config.ZocularConfig.Reframe;
 import dev.bhored.zocular.config.ZocularConfig.ShaderMode;
 import dev.bhored.zocular.config.ZocularConfig.ShotStyle;
@@ -16,6 +18,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -23,7 +26,7 @@ import net.minecraft.resources.Identifier;
  * Everything the settings screen shows, grouped into pages. The order here is the order on screen.
  */
 public final class Settings {
-	public sealed interface Entry permits Setting, Heading, Note, Binding {
+	public sealed interface Entry permits Setting, Heading, Note, Binding, Action {
 	}
 
 	public record Heading(String key) implements Entry {
@@ -39,6 +42,17 @@ public final class Settings {
 	}
 
 	public record Binding(KeyMapping mapping) implements Entry {
+	}
+
+	/** A button that opens another screen, given the settings screen to return to. */
+	public record Action(String key, Function<Screen, Screen> screen) implements Entry {
+		public Component name() {
+			return Component.translatable("zocular.action." + key);
+		}
+
+		public Component description() {
+			return Component.translatable("zocular.action." + key + ".desc");
+		}
 	}
 
 	public record Page(String id, Identifier icon, List<Entry> entries) {
@@ -87,15 +101,18 @@ public final class Settings {
 		return new Page("cinematic", Zocular.id("icon/cinematic"), List.of(
 			new Heading("cinematic.shot"),
 			cycle("cinematic.style", ShotStyle.values(), c -> c.cinematic.style, (c, v) -> c.cinematic.style = v),
-			slider("cinematic.distance", 3.0F, 32.0F, 0.5F, format("blocks", "%.1f"), c -> c.cinematic.distance, (c, v) -> c.cinematic.distance = v),
-			slider("cinematic.height", -2.0F, 10.0F, 0.25F, format("blocks", "%.2f"), c -> c.cinematic.height, (c, v) -> c.cinematic.height = v),
+			slider("cinematic.shot_length", 3.0F, 30.0F, 1.0F, format("seconds", "%.0f"), c -> c.cinematic.shotLength, (c, v) -> c.cinematic.shotLength = v)
+				.visibleWhen(() -> ZocularConfig.get().cinematic.style == ShotStyle.AUTO),
+			cycle("cinematic.reframe", Reframe.values(), c -> c.cinematic.reframe, (c, v) -> c.cinematic.reframe = v)
+				.visibleWhen(() -> ZocularConfig.get().cinematic.style == ShotStyle.AUTO || ZocularConfig.get().cinematic.style == ShotStyle.TRIPOD),
+			slider("cinematic.distance", 3.0F, 24.0F, 0.5F, format("blocks", "%.1f"), c -> c.cinematic.distance, (c, v) -> c.cinematic.distance = v),
+			slider("cinematic.height", -2.0F, 8.0F, 0.25F, format("blocks", "%.2f"), c -> c.cinematic.height, (c, v) -> c.cinematic.height = v),
+			slider("cinematic.fov", 30.0F, 90.0F, 1.0F, format("degrees", "%.0f"), c -> c.cinematic.fov, (c, v) -> c.cinematic.fov = v),
 			slider("cinematic.orbit_speed", 1.0F, 45.0F, 1.0F, format("degrees_per_second", "%.0f"), c -> c.cinematic.orbitSpeed, (c, v) -> c.cinematic.orbitSpeed = v)
 				.visibleWhen(() -> ZocularConfig.get().cinematic.style == ShotStyle.ORBIT),
 			slider("cinematic.follow_smoothing", 0.0F, 1.0F, 0.05F, percent(false), c -> c.cinematic.followSmoothing, (c, v) -> c.cinematic.followSmoothing = v)
 				.visibleWhen(() -> ZocularConfig.get().cinematic.style != ShotStyle.TRIPOD),
 			slider("cinematic.reframe_angle", 10.0F, 60.0F, 1.0F, format("degrees", "%.0f"), c -> c.cinematic.reframeAngle, (c, v) -> c.cinematic.reframeAngle = v)
-				.visibleWhen(() -> ZocularConfig.get().cinematic.style == ShotStyle.TRIPOD),
-			cycle("cinematic.reframe", Reframe.values(), c -> c.cinematic.reframe, (c, v) -> c.cinematic.reframe = v)
 				.visibleWhen(() -> ZocularConfig.get().cinematic.style == ShotStyle.TRIPOD),
 			new Heading("cinematic.look"),
 			slider("cinematic.transition", 0.0F, 3000.0F, 50.0F, millis(), c -> c.cinematic.transitionMs, (c, v) -> c.cinematic.transitionMs = v),
@@ -153,9 +170,12 @@ public final class Settings {
 		return new Page("hud", Zocular.id("icon/interface"), List.of(
 			new Heading("hud.overlays"),
 			toggle("hud.zoom_indicator", c -> c.hud.zoomIndicator, (c, v) -> c.hud.zoomIndicator = v),
-			toggle("hud.freecam_panel", c -> c.hud.freecamPanel, (c, v) -> c.hud.freecamPanel = v),
-			toggle("hud.hints", c -> c.hud.hints, (c, v) -> c.hud.hints = v),
-			toggle("hud.notices", c -> c.hud.notices, (c, v) -> c.hud.notices = v)
+			cycle("hud.freecam_panel", PanelMode.values(), c -> c.hud.freecamPanel, (c, v) -> c.hud.freecamPanel = v),
+			toggle("hud.path_timeline", c -> c.hud.pathTimeline, (c, v) -> c.hud.pathTimeline = v),
+			toggle("hud.notices", c -> c.hud.notices, (c, v) -> c.hud.notices = v),
+			new Heading("hud.layout"),
+			new Action("hud_editor", HudEditorScreen::new),
+			new Note("hud.layout")
 		));
 	}
 
