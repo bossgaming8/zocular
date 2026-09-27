@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest something new for Zocular.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What would you use it for?
+      description: Knowing the kind of shot or situation helps a lot.

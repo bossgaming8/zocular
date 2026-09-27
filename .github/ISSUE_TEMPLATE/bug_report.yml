@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in Zocular doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I reproduce it?
+      placeholder: |
+        1. Turn on freecam
+        2. Fly into water
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: zocular-version
+    attributes:
+      label: Zocular version
+      placeholder: 2.0.0+26.3
+    validations:
+      required: true
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: Minecraft and Fabric Loader versions
+      placeholder: Minecraft 26.3, Fabric Loader 0.19.5
+    validations:
+      required: true
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other mods
+      description: A list of your other mods, or at least the ones that touch the camera or rendering (Sodium, Iris, other zoom or freecam mods).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or crash report
+      description: Upload `logs/latest.log` or the crash report to https://mclo.gs and paste the link here.
