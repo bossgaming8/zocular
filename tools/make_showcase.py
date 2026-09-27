@@ -42,9 +42,9 @@ def clip():
         if f not in cache:
             cache[f] = Image.open(f).convert("RGB").resize(CLIP_SIZE, Image.LANCZOS)
         images.append(cache[f])
-    out = OUT / "camera-path.webp"
+    out = OUT / "flyover.webp"
     images[0].save(out, save_all=True, append_images=images[1:], duration=round(1000 / CLIP_FPS),
-                   loop=0, quality=58, method=6)
+                   loop=0, quality=50, method=6)
     print(out.name, len(recorded), "recorded,", len(set(chosen)), "used,", out.stat().st_size // 1024, "KB")
 
 

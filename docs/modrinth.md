@@ -7,7 +7,7 @@
 [![PayPal](https://raw.githubusercontent.com/bossgaming8/zocular/main/docs/assets/badges/paypal.png)](https://www.paypal.com/paypalme/BhoredM)&nbsp;&nbsp;
 [![Source](https://raw.githubusercontent.com/bossgaming8/zocular/main/docs/assets/badges/source.png)](https://github.com/bossgaming8/zocular)
 
-![A camera path recorded with Zocular](https://raw.githubusercontent.com/bossgaming8/zocular/main/docs/assets/showcase/camera-path.webp)
+![A camera path recorded with Zocular](https://raw.githubusercontent.com/bossgaming8/zocular/main/docs/assets/showcase/flyover.webp)
 
 **Smooth zoom, a film-style cinematic camera, freecam and keyframed camera paths. Client-side, and configured from one clean settings screen.**
 
@@ -16,19 +16,21 @@
 ## Features
 
 ### Zoom
-- Hold **Z** to zoom and scroll to go anywhere from 1.1× to 50×.
+- Hold **C** to zoom and scroll to go anywhere from 1.1× to 50×.
 - Mouse speed follows the zoom, so your aim stays steady at any level.
+- The zoom level shows in the top right, out of the way of your potion effects.
 - Optional look smoothing, hide-hand, and "remember my last zoom".
 
 ### Cinematic camera
-Press **I** and the camera flies out to frame you like a shot from a film, complete with letterbox bars and a soft vignette.
-- **Tripod** holds its frame and only pans once you drift toward the edge. Walk out of range or behind a wall and it glides, or cuts, to a new angle.
-- **Chase** follows behind you. **Orbit** slowly circles you.
-- **R** cuts to a fresh angle whenever you want one.
+Press **I** and the camera flies out and directs the scene like a western film, complete with letterbox bars and a soft vignette.
+- **Auto** works like a camera crew: it tracks alongside you, chases low behind you, leads from the front, sets up roadside cameras you ride past and pulls out for wide shots, cutting between them as you travel.
+- Rock-steady footage: your steps and hits don't shake the camera, and it shoots through its own lens.
+- Prefer one kind of shot? Pick **Tripod**, **Chase**, **Side** or **Orbit** instead.
+- **R** cuts to the next shot whenever you want one.
 - Can switch Iris shaders on or off for the shot and put them back afterwards.
 
 ### Freecam
-Press **K** to fly the camera anywhere while your character waits where you left it. Blocks stop the camera unless you turn on noclip, and taking damage snaps you straight back.
+Press **F4** to fly the camera anywhere while your character waits where you left it. Blocks stop the camera unless you turn on noclip, and taking damage snaps you straight back. The freecam panel has a Hide button (**H**) if you want a cleaner screen.
 
 ### Camera paths
 In freecam, **left-click** to drop keyframes along a route and **right-click** to play them back as one smooth shot. The camera follows a spline at an even speed with gentle easing, which makes it easy to film build tours and trailers.
@@ -38,7 +40,7 @@ Adjust the third-person distance, switch to an over-the-shoulder view, and roll 
 
 ## Settings
 
-Everything lives in one settings screen: open it from Mod Menu, type `/zocular`, or bind a key to it. Every option explains what it does, and anything you've changed can be reset with one click.
+Everything lives in one settings screen: open it from Mod Menu, type `/zocular`, or bind a key to it. Every option explains what it does, and anything you've changed can be reset with one click. Every Zocular HUD element can be dragged wherever you like with `/zocular hud`.
 
 ![Zocular settings screen](https://raw.githubusercontent.com/bossgaming8/zocular/main/docs/assets/showcase/settings.webp)
 
@@ -46,10 +48,11 @@ Everything lives in one settings screen: open it from Mod Menu, type `/zocular`,
 
 | Action | Default key |
 |---|---|
-| Zoom (hold, scroll to adjust) | `Z` |
+| Zoom (hold, scroll to adjust) | `C` |
 | Cinematic camera | `I` |
 | Next shot | `R` |
-| Freecam | `K` |
+| Freecam | `F4` |
+| Freecam panel full / compact | `H` |
 | Roll left / right / level | `[` / `]` / `\` |
 | Switch shoulder | not bound |
 | Open settings | not bound, or `/zocular` |
@@ -74,7 +77,7 @@ Zocular only runs on your client, so it works on any server. Some servers don't 
 
 Zocular is made by Bhored from **Banana Sandwich SMP**, a mature (18+), Hermitcraft-inspired vanilla server with proximity voice chat, built around genuine collaboration and fun.
 
-**[Join the Discord](https://discord.gg/bananasandwich)** to hop on.
+**[Visit bananasandwich.us](https://www.bananasandwich.us)** or **[join the Discord](https://discord.gg/bananasandwich)** to hop on.
 
 </div>
 
