@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.2.0 (Minecraft 26.3)
 
 - New overhead view (<kbd>U</kbd>), like a strategy game: the camera hangs above you at a fixed angle and a mouse cursor appears. Click what the cursor is on to mine, build, open chests or hit mobs, within your normal reach (the block outline shows when you can). <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> move you up, left, down and right on the screen, <kbd>[</kbd> and <kbd>]</kbd> turn the camera, and holding Zoom while scrolling raises or lowers it. Height, angle and lens are under Camera > Overhead view. The new Zocular title shows for a moment when it switches on (Show the title turns that off).
 - New blue Zocular title and icon, and the settings screen and HUD panels are blue to match.
