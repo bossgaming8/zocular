@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0 (Minecraft 26.3)
+
+- New League mode (<kbd>=</kbd>): the overhead camera with League-style controls. Right-click somewhere to walk there (hold it to steer), left-click to mine or hit (out of reach, you walk over first), and Shift + right-click to place blocks or open things. <kbd>R</kbd> switches between three cameras: Follow, Free (push the mouse against a screen edge to pan, middle-click brings it back) and Auto-turn (swings round behind the way you walk). A box in the corner shows which camera is on.
+- Fixed the screen bouncing when you held Zoom in third person. Minecraft counts a held key as many presses, which flicked the far view on and off; every Zocular key now reacts once per press.
+- The far view now goes to a set Pull-back distance (12 blocks to start, under Camera) and stays there until you press Zoom again. Scroll still moves it in or out.
+- The overhead view moved from <kbd>U</kbd> to <kbd>-</kbd>, because Xaero's Minimap uses <kbd>U</kbd> for waypoints. If you were still on <kbd>U</kbd>, it moves over by itself.
+
 ## 2.2.0 (Minecraft 26.3)
 
 - New overhead view (<kbd>U</kbd>), like a strategy game: the camera hangs above you at a fixed angle and a mouse cursor appears. Click what the cursor is on to mine, build, open chests or hit mobs, within your normal reach (the block outline shows when you can). <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> move you up, left, down and right on the screen, <kbd>[</kbd> and <kbd>]</kbd> turn the camera, and holding Zoom while scrolling raises or lowers it. Height, angle and lens are under Camera > Overhead view. The new Zocular title shows for a moment when it switches on (Show the title turns that off).

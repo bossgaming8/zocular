@@ -5,6 +5,7 @@ import dev.bhored.zocular.Zocular;
 import dev.bhored.zocular.compat.IrisShaders;
 import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.config.ZocularConfig.Labeled;
+import dev.bhored.zocular.config.ZocularConfig.LeagueCamera;
 import dev.bhored.zocular.config.ZocularConfig.PanelMode;
 import dev.bhored.zocular.config.ZocularConfig.Reframe;
 import dev.bhored.zocular.config.ZocularConfig.ShaderMode;
@@ -168,6 +169,7 @@ public final class Settings {
 			slider("overhead.angle", 30.0F, 85.0F, 1.0F, format("degrees", "%.0f"), c -> c.overhead.angle, (c, v) -> c.overhead.angle = v),
 			slider("overhead.fov", 20.0F, 90.0F, 1.0F, format("degrees", "%.0f"), c -> c.overhead.fov, (c, v) -> c.overhead.fov = v),
 			toggle("overhead.splash", c -> c.overhead.splash, (c, v) -> c.overhead.splash = v),
+			cycle("overhead.league_camera", LeagueCamera.values(), c -> c.overhead.leagueCamera, (c, v) -> c.overhead.leagueCamera = v),
 			new Note("camera.overhead"),
 			new Heading("camera.roll"),
 			slider("roll.speed", 5.0F, 180.0F, 5.0F, format("degrees_per_second", "%.0f"), c -> c.roll.speed, (c, v) -> c.roll.speed = v),

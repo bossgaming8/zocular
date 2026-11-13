@@ -17,7 +17,8 @@ public final class Keybinds {
 	public static final KeyMapping CINEMATIC = create("cinematic", InputConstants.KEY_I);
 	public static final KeyMapping NEXT_SHOT = create("next_shot", InputConstants.KEY_R);
 	public static final KeyMapping FREECAM = create("freecam", InputConstants.KEY_F4);
-	public static final KeyMapping OVERHEAD = create("overhead", InputConstants.KEY_U);
+	public static final KeyMapping OVERHEAD = create("overhead", InputConstants.KEY_MINUS);
+	public static final KeyMapping LEAGUE = create("league", InputConstants.KEY_EQUALS);
 	public static final KeyMapping FREECAM_PANEL = create("freecam_panel", InputConstants.KEY_H);
 	public static final KeyMapping ROLL_LEFT = create("roll_left", InputConstants.KEY_LBRACKET);
 	public static final KeyMapping ROLL_RIGHT = create("roll_right", InputConstants.KEY_RBRACKET);
@@ -26,7 +27,7 @@ public final class Keybinds {
 	public static final KeyMapping SETTINGS = create("settings", UNBOUND);
 
 	public static final List<KeyMapping> ALL = List.of(
-		ZOOM, ZOOM_IN, ZOOM_OUT, CINEMATIC, NEXT_SHOT, FREECAM, FREECAM_PANEL, OVERHEAD, ROLL_LEFT, ROLL_RIGHT, ROLL_RESET, SHOULDER, SETTINGS
+		ZOOM, ZOOM_IN, ZOOM_OUT, CINEMATIC, NEXT_SHOT, FREECAM, FREECAM_PANEL, OVERHEAD, LEAGUE, ROLL_LEFT, ROLL_RIGHT, ROLL_RESET, SHOULDER, SETTINGS
 	);
 
 	private Keybinds() {
@@ -37,7 +38,8 @@ public final class Keybinds {
 	}
 
 	/**
-	 * 2.0 shipped with zoom on Z and freecam on K. Anyone still on those is moved to the current defaults once;
+	 * 2.0 shipped with zoom on Z and freecam on K, and 2.2.0 put the overhead view on U. Anyone still on those is
+	 * moved to the current defaults once;
 	 * keys people chose themselves are left alone.
 	 */
 	static void migrateOldDefaults(Minecraft minecraft) {
@@ -47,6 +49,8 @@ public final class Keybinds {
 		}
 		boolean moved = move(ZOOM, InputConstants.KEY_Z, InputConstants.KEY_C);
 		moved |= move(FREECAM, InputConstants.KEY_K, InputConstants.KEY_F4);
+		// 2.2.0 put the overhead view on U, which Xaero's Minimap already uses for waypoints.
+		moved |= move(OVERHEAD, InputConstants.KEY_U, InputConstants.KEY_MINUS);
 		if (moved) {
 			KeyMapping.resetMapping();
 			minecraft.options.save();

@@ -22,7 +22,7 @@ public final class ZocularConfig {
 
 	public static final ZocularConfig DEFAULTS = new ZocularConfig();
 	/** Bumped whenever default key bindings change, so older bindings can be moved over once. */
-	public static final int KEY_LAYOUT = 2;
+	public static final int KEY_LAYOUT = 3;
 	private static ZocularConfig current = new ZocularConfig();
 
 	public Integer keyLayout;
@@ -152,6 +152,7 @@ public final class ZocularConfig {
 		public float angle = 55.0F;
 		public float fov = 50.0F;
 		public boolean splash = true;
+		public LeagueCamera leagueCamera = LeagueCamera.FOLLOW;
 	}
 
 	public static final class Roll {
@@ -231,6 +232,14 @@ public final class ZocularConfig {
 		CENTER, RIGHT, LEFT;
 
 		public Shoulder next() {
+			return values()[(ordinal() + 1) % values().length];
+		}
+	}
+
+	public enum LeagueCamera implements Labeled {
+		FOLLOW, FREE, AUTO_TURN;
+
+		public LeagueCamera next() {
 			return values()[(ordinal() + 1) % values().length];
 		}
 	}

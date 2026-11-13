@@ -82,6 +82,10 @@ public final class Overlay {
 			}
 			timeline(graphics, path.fraction(), markers);
 		}
+		if (control.leagueActive()) {
+			walkMarker(graphics, minecraft);
+			leagueBox(graphics, font, control);
+		}
 		Splash.draw(graphics, font);
 		Component message = Notices.current();
 		if (message != null) {
@@ -195,6 +199,54 @@ public final class Overlay {
 			graphics.fill(markerX - 1, y - 2, markerX + 1, y + 4, Theme.TEXT);
 		}
 		return new int[] {at[0], at[1], width, height};
+	}
+
+	/** The League mode box in the bottom right: which camera is on and the keys that matter. */
+	private static void leagueBox(GuiGraphicsExtractor graphics, Font font, CameraControl control) {
+		Component title = Component.translatable("zocular.hud.league");
+		java.util.List<Component> lines = new java.util.ArrayList<>();
+		lines.add(Component.translatable("zocular.hud.league.camera", control.overhead().camera().label()));
+		lines.add(Component.translatable("zocular.hud.league.switch", Keybinds.NEXT_SHOT.getTranslatedKeyMessage()));
+		if (control.overhead().camera() == ZocularConfig.LeagueCamera.FREE) {
+			lines.add(Component.translatable("zocular.hud.league.back"));
+		}
+		lines.add(Component.translatable("zocular.hud.league.build"));
+		int width = font.width(title);
+		for (Component line : lines) {
+			width = Math.max(width, font.width(line));
+		}
+		width += 14;
+		int height = 18 + lines.size() * 11;
+		int x = graphics.guiWidth() - width - 6;
+		int y = graphics.guiHeight() - height - 26;
+		Theme.box(graphics, x, y, width, height, Theme.HUD_BACKGROUND);
+		graphics.text(font, title, x + 7, y + 5, Theme.ACCENT, false);
+		for (int i = 0; i < lines.size(); i++) {
+			graphics.text(font, lines.get(i), x + 7, y + 17 + i * 11, Theme.TEXT, false);
+		}
+	}
+
+	/** A green ring on the ground where League mode is walking you to. */
+	private static void walkMarker(GuiGraphicsExtractor graphics, Minecraft minecraft) {
+		net.minecraft.world.phys.Vec3 target = CameraControl.get().overhead().walkMarker();
+		if (target == null) {
+			return;
+		}
+		net.minecraft.client.Camera camera = minecraft.gameRenderer.mainCamera();
+		net.minecraft.world.phys.Vec3 offset = target.subtract(camera.position());
+		double depth = offset.x * camera.forwardVector().x() + offset.y * camera.forwardVector().y() + offset.z * camera.forwardVector().z();
+		if (depth < 0.5) {
+			return;
+		}
+		double right = -(offset.x * camera.leftVector().x() + offset.y * camera.leftVector().y() + offset.z * camera.leftVector().z());
+		double up = offset.x * camera.upVector().x() + offset.y * camera.upVector().y() + offset.z * camera.upVector().z();
+		double tan = Math.tan(Math.toRadians(camera.getFov()) / 2.0);
+		double aspect = (double) graphics.guiWidth() / graphics.guiHeight();
+		int gx = (int) Math.round((right / (depth * tan * aspect) + 1.0) / 2.0 * graphics.guiWidth());
+		int gy = (int) Math.round((1.0 - up / (depth * tan)) / 2.0 * graphics.guiHeight());
+		int green = 0xFF5ADC78;
+		Theme.outline(graphics, gx - 9, gy - 5, 18, 10, green);
+		graphics.fill(gx - 2, gy - 1, gx + 2, gy + 1, green);
 	}
 
 	public static int[] notice(GuiGraphicsExtractor graphics, Font font, Component message, float alpha) {

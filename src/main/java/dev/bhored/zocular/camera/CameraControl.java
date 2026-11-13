@@ -92,7 +92,10 @@ public final class CameraControl {
 			toggleCinematic(minecraft);
 		}
 		if (Keys.pressed(Keybinds.OVERHEAD)) {
-			toggleOverhead(minecraft);
+			toggleOverhead(minecraft, false);
+		}
+		if (Keys.pressed(Keybinds.LEAGUE)) {
+			toggleOverhead(minecraft, true);
 		}
 		// The roll keys turn the overhead camera a step at a time; elsewhere they are read while held.
 		if (Keys.pressed(Keybinds.ROLL_LEFT) && mode == Mode.OVERHEAD) {
@@ -104,6 +107,8 @@ public final class CameraControl {
 		if (Keys.pressed(Keybinds.NEXT_SHOT)) {
 			if (mode == Mode.CINEMATIC && !leaving && owner != null) {
 				director.nextShot(minecraft.level, owner, 1.0F);
+			} else if (leagueActive()) {
+				Notices.show(Component.translatable("zocular.notice.league_camera", overhead.cycleCamera().label()));
 			}
 		}
 		if (Keys.pressed(Keybinds.ROLL_RESET)) {
@@ -312,9 +317,18 @@ public final class CameraControl {
 		blend = 0.0F;
 	}
 
-	public void toggleOverhead(Minecraft minecraft) {
+	/**
+	 * The overhead and League keys. Pressing the key of the mode you are in leaves it; pressing the other one
+	 * switches straight across without moving the camera.
+	 */
+	public void toggleOverhead(Minecraft minecraft, boolean league) {
 		if (mode == Mode.OVERHEAD) {
-			endOverhead(minecraft);
+			if (overhead.isLeague() == league) {
+				endOverhead(minecraft);
+			} else {
+				overhead.setLeague(league);
+				showOverheadTitle(league);
+			}
 			return;
 		}
 		if (minecraft.player == null || minecraft.level == null) {
@@ -327,15 +341,30 @@ public final class CameraControl {
 		}
 
 		takeOver(minecraft);
-		overhead.start(minecraft.player);
+		overhead.start(minecraft.player, league);
 		mode = Mode.OVERHEAD;
 		minecraft.mouseHandler.releaseMouse();
+		showOverheadTitle(league);
+	}
+
+	private void showOverheadTitle(boolean league) {
+		KeyMappingTitle title = league
+			? new KeyMappingTitle("zocular.splash.league", Keybinds.LEAGUE)
+			: new KeyMappingTitle("zocular.splash.overhead", Keybinds.OVERHEAD);
 		if (ZocularConfig.get().overhead.splash) {
-			Splash.show(Component.translatable("zocular.splash.overhead"),
-				Component.translatable("zocular.splash.overhead.hint", Keybinds.OVERHEAD.getTranslatedKeyMessage()));
+			Splash.show(Component.translatable(title.heading()),
+				Component.translatable("zocular.splash.overhead.hint", title.key().getTranslatedKeyMessage()));
 		} else {
-			Notices.show(Component.translatable("zocular.notice.overhead_on"));
+			Notices.show(Component.translatable(league ? "zocular.notice.league_on" : "zocular.notice.overhead_on"));
 		}
+	}
+
+	private record KeyMappingTitle(String heading, net.minecraft.client.KeyMapping key) {
+	}
+
+	/** True while League mode (the overhead view with click-to-walk) is running. */
+	public boolean leagueActive() {
+		return mode == Mode.OVERHEAD && overhead.isLeague();
 	}
 
 	private void endOverhead(Minecraft minecraft) {
@@ -344,6 +373,7 @@ public final class CameraControl {
 		}
 		release(minecraft);
 		mode = Mode.NONE;
+		overhead.clearWalk();
 		Splash.hide();
 		if (minecraft.gui.screen() == null) {
 			minecraft.mouseHandler.grabMouse();
