@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.bhored.zocular.Keybinds;
 import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.camera.CameraControl;
+import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.config.Settings;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.gui.HudEditorScreen;
@@ -40,12 +41,17 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			world.getServer().runCommand("weather clear");
 			world.getServer().runCommand("fill ~5 ~ ~5 ~9 ~6 ~9 minecraft:oak_log");
 			world.getServer().runCommand("fill ~-8 ~ ~3 ~-4 ~3 ~7 minecraft:stone_bricks");
+			world.getServer().runCommand("fill ~-14 ~ ~-10 ~-11 ~4 ~-7 minecraft:oak_planks");
+			world.getServer().runCommand("fill ~8 ~-1 ~-12 ~12 ~-1 ~-8 minecraft:water");
+			world.getServer().runCommand("summon minecraft:sheep ~3 ~ ~-4 {NoAI:1b}");
+			world.getServer().runCommand("summon minecraft:cow ~-3 ~ ~-6 {NoAI:1b}");
 			world.getServer().runCommand("tp @p ~ ~ ~ 45 10");
 			context.waitTicks(20);
 			world.getConnection().waitForChunksRender();
 			context.takeScreenshot("world");
 
 			zoom(context, input);
+			farView(context, input);
 			freecamAndPath(context, input);
 			cinematic(context, input);
 			shoulder(context, input);
@@ -114,6 +120,53 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		input.releaseKey(Keybinds.ZOOM);
 		context.waitTicks(20);
 		check(!context.computeOnClient(minecraft -> Zoom.isVisible()), "zoom should ease back out after releasing the key");
+	}
+
+	/** In third person the Zoom key swings the camera far back, and scrolling takes it further out. */
+	private static void farView(ClientGameTestContext context, TestInput input) {
+		int renderDistance = context.computeOnClient(minecraft -> minecraft.options.renderDistance().get());
+		context.runOnClient(minecraft -> {
+			minecraft.options.renderDistance().set(12);
+			minecraft.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+			minecraft.player.setXRot(40.0F);
+		});
+		context.waitTicks(5);
+		double normal = cameraGap(context);
+		check(normal < 6.0, "vanilla third person should sit close, got " + normal);
+
+		input.pressKey(Keybinds.ZOOM);
+		context.waitTicks(30);
+		check(FarView.isPulled(), "the Zoom key should pull the camera back in third person");
+		check(!Zoom.isEngaged(), "the normal zoom must not engage in third person");
+		double pulled = cameraGap(context);
+		check(pulled > 18.0, "the camera should be far back, got " + pulled);
+		context.takeScreenshot("far-view");
+
+		input.scroll(-12.0);
+		context.runOnClient(minecraft -> minecraft.player.setXRot(65.0F));
+		context.waitTicks(40);
+		double far = cameraGap(context);
+		check(far > 60.0, "scrolling should take the camera much further out, got " + far);
+		check(FarView.extraDistance() > 50.0F, "the fog should be pushed out with the camera");
+		context.takeScreenshot("far-view-max");
+
+		input.pressKey(Keybinds.ZOOM);
+		context.waitTicks(30);
+		check(!FarView.isPulled(), "pressing Zoom again should bring the camera back");
+		double back = cameraGap(context);
+		check(back < 6.0, "the camera should be back at the normal distance, got " + back);
+
+		context.runOnClient(minecraft -> {
+			minecraft.options.renderDistance().set(renderDistance);
+			minecraft.options.setCameraType(CameraType.FIRST_PERSON);
+			minecraft.player.setXRot(10.0F);
+		});
+		context.waitTicks(3);
+	}
+
+	private static double cameraGap(ClientGameTestContext context) {
+		return context.computeOnClient(minecraft ->
+			minecraft.gameRenderer.mainCamera().position().distanceTo(minecraft.player.getEyePosition()));
 	}
 
 	private static void freecamAndPath(ClientGameTestContext context, TestInput input) {

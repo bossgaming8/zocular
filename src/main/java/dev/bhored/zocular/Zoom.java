@@ -1,5 +1,6 @@
 package dev.bhored.zocular;
 
+import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.config.ZocularConfig.ZoomMode;
 import dev.bhored.zocular.util.Motion;
@@ -27,7 +28,18 @@ public final class Zoom {
 	/** Called once per rendered frame, before the camera works out its field of view. */
 	public static void update(Minecraft minecraft, float dt) {
 		ZocularConfig.Zoom config = ZocularConfig.get().zoom;
-		boolean wanted = readKey(config.mode) && config.enabled && minecraft.player != null;
+		boolean wanted;
+		if (FarView.applies(minecraft)) {
+			// In third person the Zoom key pulls the camera back instead.
+			while (Keybinds.ZOOM.consumeClick()) {
+				FarView.toggle();
+			}
+			toggled = false;
+			wanted = false;
+		} else {
+			wanted = readKey(config.mode) && config.enabled && minecraft.player != null;
+		}
+		FarView.update(minecraft, dt);
 
 		if (wanted != engaged) {
 			engaged = wanted;
@@ -70,6 +82,9 @@ public final class Zoom {
 
 	/** Scroll handling; returns true when the scroll was used for zooming. */
 	public static boolean scroll(double amount) {
+		if (FarView.scroll(amount)) {
+			return true;
+		}
 		if (!engaged || !ZocularConfig.get().zoom.scrollToZoom) {
 			return false;
 		}
@@ -87,6 +102,7 @@ public final class Zoom {
 	}
 
 	public static void reset() {
+		FarView.reset();
 		engaged = false;
 		toggled = false;
 		shownLog = 0.0;

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Far third-person view is back: in F5, press Zoom (<kbd>C</kbd>) to swing the camera far out behind you, scroll to take it as far as 96 blocks (up to 256 in the settings) or back in, and press Zoom again to come back. You keep playing normally the whole time, and fog is pushed out with the camera so the world doesn't vanish. Turn it off under Camera > Zoom key pulls the camera back.
 - Camera paths can now play while you keep playing: turn on Camera Path > Play while it runs, set your keyframes in freecam and press Use. During the shot, your movement, mouse and clicks go to your player, so you can walk, build or fight on camera. Freecam (<kbd>F4</kbd>) stops the shot, and when it ends the camera comes back to you.
 
 ## 2.1.0 (Minecraft 26.3)
