@@ -32,6 +32,7 @@ public final class ZocularConfig {
 	public Freecam freecam = new Freecam();
 	public CameraPath path = new CameraPath();
 	public ThirdPerson thirdPerson = new ThirdPerson();
+	public Overhead overhead = new Overhead();
 	public Roll roll = new Roll();
 	public Hud hud = new Hud();
 
@@ -79,6 +80,7 @@ public final class ZocularConfig {
 		if (freecam == null) freecam = new Freecam();
 		if (path == null) path = new CameraPath();
 		if (thirdPerson == null) thirdPerson = new ThirdPerson();
+		if (overhead == null) overhead = new Overhead();
 		if (roll == null) roll = new Roll();
 		if (hud == null) hud = new Hud();
 		if (hud.positions == null) hud.positions = new LinkedHashMap<>();
@@ -142,6 +144,12 @@ public final class ZocularConfig {
 		public float maxDistance = 96.0F;
 		public Shoulder shoulder = Shoulder.CENTER;
 		public float shoulderOffset = 0.75F;
+	}
+
+	public static final class Overhead {
+		public float distance = 18.0F;
+		public float angle = 55.0F;
+		public float fov = 50.0F;
 	}
 
 	public static final class Roll {

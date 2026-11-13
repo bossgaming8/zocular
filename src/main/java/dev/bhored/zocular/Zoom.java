@@ -1,5 +1,6 @@
 package dev.bhored.zocular;
 
+import dev.bhored.zocular.camera.CameraControl;
 import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.config.ZocularConfig.ZoomMode;
@@ -29,7 +30,14 @@ public final class Zoom {
 	public static void update(Minecraft minecraft, float dt) {
 		ZocularConfig.Zoom config = ZocularConfig.get().zoom;
 		boolean wanted;
-		if (FarView.applies(minecraft)) {
+		if (CameraControl.get().mode() == CameraControl.Mode.OVERHEAD) {
+			// Zoom is held to change the overhead camera height instead.
+			while (Keybinds.ZOOM.consumeClick()) {
+				// Only whether the key is down matters here.
+			}
+			toggled = false;
+			wanted = false;
+		} else if (FarView.applies(minecraft)) {
 			// In third person the Zoom key pulls the camera back instead.
 			while (Keybinds.ZOOM.consumeClick()) {
 				FarView.toggle();

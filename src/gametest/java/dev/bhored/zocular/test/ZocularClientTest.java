@@ -14,7 +14,11 @@ import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -55,6 +59,7 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			freecamAndPath(context, input);
 			cinematic(context, input);
 			shoulder(context, input);
+			overhead(context, input, world);
 			hudEditor(context, input);
 			settingsPages(context, "ingame");
 		}
@@ -251,6 +256,82 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			config.playAlong = previousPlayAlong;
 			config.duration = previousDuration;
 		}
+	}
+
+	/**
+	 * The overhead view: put the cursor over a block on screen, click to mine it, click again to build there,
+	 * and check that W walks up the screen.
+	 */
+	private static void overhead(ClientGameTestContext context, TestInput input, TestSingleplayerContext world) {
+		world.getServer().runCommand("gamemode creative @a");
+		world.getServer().runCommand("tp @p 0.5 -60 20.5 0 10");
+		world.getServer().runCommand("setblock 2 -60 20 minecraft:gold_block");
+		world.getServer().runCommand("clear @p");
+		world.getServer().runCommand("give @p minecraft:oak_planks 16");
+		input.pressKey(options -> options.keyHotbarSlots[0]);
+		context.waitTicks(10);
+		BlockPos gold = new BlockPos(2, -60, 20);
+
+		input.pressKey(Keybinds.OVERHEAD);
+		context.waitTicks(30);
+		check(CameraControl.get().mode() == CameraControl.Mode.OVERHEAD, "the overhead view should be on");
+		check(!context.computeOnClient(minecraft -> minecraft.mouseHandler.isMouseGrabbed()), "the cursor should be free");
+
+		double[] onGold = project(context, Vec3.atCenterOf(gold).add(0.0, 0.5, 0.0));
+		input.setCursorPos(onGold[0], onGold[1]);
+		context.waitTicks(3);
+		BlockPos aimed = context.computeOnClient(minecraft ->
+			minecraft.hitResult instanceof BlockHitResult hit ? hit.getBlockPos() : null);
+		check(gold.equals(aimed), "the cursor should point the player at the gold block, got " + aimed);
+		context.takeScreenshot("overhead");
+
+		input.pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+		context.waitTicks(5);
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(gold).isAir()), "clicking should mine the block under the cursor");
+		check(!context.computeOnClient(minecraft -> minecraft.mouseHandler.isMouseGrabbed()), "clicking must not grab the mouse");
+
+		double[] onGround = project(context, Vec3.atCenterOf(gold).subtract(0.0, 0.5, 0.0));
+		input.setCursorPos(onGround[0], onGround[1]);
+		context.waitTicks(3);
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(5);
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(gold).is(Blocks.OAK_PLANKS)), "right-clicking should place a block where the cursor is");
+		context.takeScreenshot("overhead-built");
+
+		input.pressKey(Keybinds.ROLL_RIGHT);
+		context.waitTicks(20);
+		Vec3 before = context.computeOnClient(minecraft -> minecraft.player.position());
+		float cameraYaw = CameraControl.get().overhead().yaw();
+		input.holdKeyFor(options -> options.keyUp, 20);
+		Vec3 moved = context.computeOnClient(minecraft -> minecraft.player.position()).subtract(before).multiply(1.0, 0.0, 1.0);
+		Vec3 up = Vec3.directionFromRotation(0.0F, cameraYaw);
+		check(moved.length() > 1.0, "W should walk, moved " + moved.length());
+		check(moved.normalize().dot(up) > 0.85, "W should walk up the screen, dot " + moved.normalize().dot(up));
+		context.takeScreenshot("overhead-walked");
+
+		input.pressKey(Keybinds.OVERHEAD);
+		context.waitTicks(3);
+		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "the overhead view should be off");
+		check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
+		world.getServer().runCommand("clear @p");
+	}
+
+	/** Where a world point lands on screen, in window pixels, using the camera the game actually rendered. */
+	private static double[] project(ClientGameTestContext context, Vec3 point) {
+		return context.computeOnClient(minecraft -> {
+			Camera camera = minecraft.gameRenderer.mainCamera();
+			Vec3 forward = new Vec3(camera.forwardVector().x(), camera.forwardVector().y(), camera.forwardVector().z());
+			Vec3 up = new Vec3(camera.upVector().x(), camera.upVector().y(), camera.upVector().z());
+			Vec3 right = new Vec3(-camera.leftVector().x(), -camera.leftVector().y(), -camera.leftVector().z());
+			Vec3 offset = point.subtract(camera.position());
+			double depth = offset.dot(forward);
+			double width = minecraft.getWindow().getScreenWidth();
+			double height = minecraft.getWindow().getScreenHeight();
+			double tan = Math.tan(Math.toRadians(camera.getFov()) / 2.0);
+			double x = offset.dot(right) / (depth * tan * width / height);
+			double y = offset.dot(up) / (depth * tan);
+			return new double[] {(x + 1.0) / 2.0 * width, (1.0 - y) / 2.0 * height};
+		});
 	}
 
 	private static void cinematic(ClientGameTestContext context, TestInput input) {

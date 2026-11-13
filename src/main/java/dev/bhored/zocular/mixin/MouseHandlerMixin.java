@@ -3,6 +3,7 @@ package dev.bhored.zocular.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import dev.bhored.zocular.Keybinds;
 import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.camera.CameraControl;
 import dev.bhored.zocular.util.LookSmoothing;
@@ -39,6 +40,14 @@ public abstract class MouseHandlerMixin {
 		}
 	}
 
+	@Inject(method = "grabMouse", at = @At("HEAD"), cancellable = true)
+	private void zocular$keepCursor(CallbackInfo ci) {
+		// The overhead view plays with a free cursor; clicks still reach the game while it is released.
+		if (CameraControl.get().keepsCursor()) {
+			ci.cancel();
+		}
+	}
+
 	@Inject(method = "onScroll", at = @At("HEAD"), cancellable = true)
 	private void zocular$scroll(long handle, double xOffset, double yOffset, CallbackInfo ci) {
 		if (handle != minecraft.getWindow().handle() || minecraft.player == null
@@ -52,7 +61,10 @@ public abstract class MouseHandlerMixin {
 		}
 
 		CameraControl control = CameraControl.get();
-		if (control.mode() == CameraControl.Mode.FREECAM && !control.playingAlong()) {
+		if (control.mode() == CameraControl.Mode.OVERHEAD && Keybinds.ZOOM.isDown()) {
+			control.overhead().scroll(amount);
+			ci.cancel();
+		} else if (control.mode() == CameraControl.Mode.FREECAM && !control.playingAlong()) {
 			if (!control.path().isPlaying()) {
 				control.adjustFreecamSpeed(amount);
 			}

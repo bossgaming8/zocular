@@ -29,7 +29,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class CameraControl {
 	public enum Mode {
-		NONE, FREECAM, CINEMATIC
+		NONE, FREECAM, CINEMATIC, OVERHEAD
 	}
 
 	private static final CameraControl INSTANCE = new CameraControl();
@@ -37,6 +37,7 @@ public final class CameraControl {
 	private final Freecam freecam = new Freecam();
 	private final Director director = new Director();
 	private final KeyframePath path = new KeyframePath();
+	private final Overhead overhead = new Overhead();
 
 	private Mode mode = Mode.NONE;
 	private @Nullable LocalPlayer owner;
@@ -78,12 +79,30 @@ public final class CameraControl {
 		return path;
 	}
 
+	public Overhead overhead() {
+		return overhead;
+	}
+
 	public void tick(Minecraft minecraft) {
 		while (Keybinds.FREECAM.consumeClick()) {
 			toggleFreecam(minecraft);
 		}
 		while (Keybinds.CINEMATIC.consumeClick()) {
 			toggleCinematic(minecraft);
+		}
+		while (Keybinds.OVERHEAD.consumeClick()) {
+			toggleOverhead(minecraft);
+		}
+		// The roll keys turn the overhead camera a step at a time; elsewhere they are read while held.
+		while (Keybinds.ROLL_LEFT.consumeClick()) {
+			if (mode == Mode.OVERHEAD) {
+				overhead.turn(-1);
+			}
+		}
+		while (Keybinds.ROLL_RIGHT.consumeClick()) {
+			if (mode == Mode.OVERHEAD) {
+				overhead.turn(1);
+			}
 		}
 		while (Keybinds.NEXT_SHOT.consumeClick()) {
 			if (mode == Mode.CINEMATIC && !leaving && owner != null) {
@@ -121,6 +140,9 @@ public final class CameraControl {
 			Notices.show(Component.translatable("zocular.notice.freecam_hurt"));
 		}
 		lastHurtTime = player.hurtTime;
+		if (mode == Mode.OVERHEAD && minecraft.gui.screen() == null && minecraft.mouseHandler.isMouseGrabbed()) {
+			minecraft.mouseHandler.releaseMouse();
+		}
 	}
 
 	/** Runs at the start of every camera update, before vanilla positions the camera. */
@@ -151,6 +173,9 @@ public final class CameraControl {
 			return null;
 		}
 
+		if (mode == Mode.OVERHEAD) {
+			return overhead.update(minecraft, owner, dt, partialTicks);
+		}
 		updateRoll(dt);
 		return mode == Mode.FREECAM ? freecamPose(minecraft, dt, partialTicks) : cinematicPose(minecraft, camera, dt, partialTicks);
 	}
@@ -222,6 +247,7 @@ public final class CameraControl {
 		if (mode == Mode.CINEMATIC) {
 			endCinematic(minecraft);
 		}
+		endOverhead(minecraft);
 
 		Camera camera = minecraft.gameRenderer.mainCamera();
 		takeOver(minecraft);
@@ -251,6 +277,7 @@ public final class CameraControl {
 		if (mode == Mode.FREECAM) {
 			exitFreecam(minecraft);
 		}
+		endOverhead(minecraft);
 
 		Camera camera = minecraft.gameRenderer.mainCamera();
 		entryPose = new Pose(camera.position(), camera.yRot(), camera.xRot(), 0.0F);
@@ -288,6 +315,38 @@ public final class CameraControl {
 		blend = 0.0F;
 	}
 
+	public void toggleOverhead(Minecraft minecraft) {
+		if (mode == Mode.OVERHEAD) {
+			endOverhead(minecraft);
+			return;
+		}
+		if (minecraft.player == null || minecraft.level == null) {
+			return;
+		}
+		if (mode == Mode.FREECAM) {
+			exitFreecam(minecraft);
+		} else if (mode == Mode.CINEMATIC) {
+			endCinematic(minecraft);
+		}
+
+		takeOver(minecraft);
+		overhead.start(minecraft.player);
+		mode = Mode.OVERHEAD;
+		minecraft.mouseHandler.releaseMouse();
+		Notices.show(Component.translatable("zocular.notice.overhead_on"));
+	}
+
+	private void endOverhead(Minecraft minecraft) {
+		if (mode != Mode.OVERHEAD) {
+			return;
+		}
+		release(minecraft);
+		mode = Mode.NONE;
+		if (minecraft.gui.screen() == null) {
+			minecraft.mouseHandler.grabMouse();
+		}
+	}
+
 	private void takeOver(Minecraft minecraft) {
 		owner = minecraft.player;
 		lastHurtTime = owner.hurtTime;
@@ -309,6 +368,8 @@ public final class CameraControl {
 			exitFreecam(minecraft);
 		} else if (mode == Mode.CINEMATIC) {
 			endCinematic(minecraft);
+		} else if (mode == Mode.OVERHEAD) {
+			endOverhead(minecraft);
 		}
 		finishPending = false;
 		Zoom.reset();
@@ -416,6 +477,7 @@ public final class CameraControl {
 			case NONE -> vanilla;
 			case FREECAM -> Minecraft.getInstance().options.fov().get();
 			case CINEMATIC -> Mth.lerp(Motion.easeInOut(blend), vanilla, ZocularConfig.get().cinematic.fov);
+			case OVERHEAD -> ZocularConfig.get().overhead.fov;
 		};
 	}
 
@@ -437,6 +499,19 @@ public final class CameraControl {
 	/** True while a camera path plays and the player has been handed back their own controls. */
 	public boolean playingAlong() {
 		return mode == Mode.FREECAM && playAlong && path.isPlaying();
+	}
+
+	/** True while the overhead view owns the mouse cursor, so the game must not grab it. */
+	public boolean keepsCursor() {
+		return mode == Mode.OVERHEAD;
+	}
+
+	/**
+	 * How far to turn the movement keys, in radians, so forward means up the screen rather than the way the
+	 * player is facing.
+	 */
+	public float overheadMoveTurn(LocalPlayer player) {
+		return (overhead.yaw() - player.getYRot()) * Mth.DEG_TO_RAD;
 	}
 
 	public boolean freezesPlayer() {
