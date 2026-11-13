@@ -655,6 +655,11 @@ public final class SettingsScreen extends Screen {
 			Theme.sprite(graphics, Theme.KNOB, knobX, trackY + 1, 8, 8, Theme.fade(Theme.mix(Theme.TEXT_MUTED, Theme.TEXT, knob), alpha));
 
 			Component state = Component.translatable(setting.get() ? "options.on" : "options.off");
+			Component key = setting.boundKey();
+			if (key != null) {
+				// A feature with a key shows it, e.g. "On · C", instead of a bare "On".
+				state = Component.empty().append(state).append(" · ").append(key);
+			}
 			graphics.text(font, state, trackX - 6 - font.width(state), y + 8, Theme.fade(setting.get() ? Theme.TEXT : Theme.TEXT_FAINT, alpha), false);
 		}
 

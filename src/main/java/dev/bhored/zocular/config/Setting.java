@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
@@ -16,6 +17,7 @@ public abstract sealed class Setting<T> implements Settings.Entry permits Settin
 	private final Function<ZocularConfig, T> getter;
 	private final BiConsumer<ZocularConfig, T> setter;
 	private BooleanSupplier visible = () -> true;
+	private KeyMapping keyHint;
 
 	private Setting(String key, Function<ZocularConfig, T> getter, BiConsumer<ZocularConfig, T> setter) {
 		this.key = key;
@@ -58,6 +60,17 @@ public abstract sealed class Setting<T> implements Settings.Entry permits Settin
 	public Setting<T> visibleWhen(BooleanSupplier condition) {
 		this.visible = condition;
 		return this;
+	}
+
+	/** Ties this setting to the key that drives it, so the settings screen can show the key next to the value. */
+	public Setting<T> keyedTo(KeyMapping mapping) {
+		this.keyHint = mapping;
+		return this;
+	}
+
+	/** The key currently bound to this setting's feature, or null when none is tied or it is unbound. */
+	public Component boundKey() {
+		return keyHint == null || keyHint.isUnbound() ? null : keyHint.getTranslatedKeyMessage();
 	}
 
 	public boolean isVisible() {

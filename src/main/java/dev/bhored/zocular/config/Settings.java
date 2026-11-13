@@ -84,7 +84,7 @@ public final class Settings {
 	private static Page zoom() {
 		return new Page("zoom", Zocular.id("icon/zoom"), List.of(
 			new Heading("zoom.behavior"),
-			toggle("zoom.enabled", c -> c.zoom.enabled, (c, v) -> c.zoom.enabled = v),
+			toggle("zoom.enabled", c -> c.zoom.enabled, (c, v) -> c.zoom.enabled = v, Keybinds.ZOOM),
 			cycle("zoom.mode", ZoomMode.values(), c -> c.zoom.mode, (c, v) -> c.zoom.mode = v),
 			slider("zoom.start_level", 1.5F, 16.0F, 0.5F, format("times", "%.1f"), c -> c.zoom.startLevel, (c, v) -> c.zoom.startLevel = v),
 			slider("zoom.max_level", 8.0F, 100.0F, 1.0F, format("times", "%.0f"), c -> c.zoom.maxLevel, (c, v) -> c.zoom.maxLevel = v),
@@ -204,6 +204,14 @@ public final class Settings {
 
 	private static Setting.Toggle toggle(String key, Function<ZocularConfig, Boolean> getter, BiConsumer<ZocularConfig, Boolean> setter) {
 		return new Setting.Toggle(key, getter, setter);
+	}
+
+	/** A toggle for a feature that has a key: the settings screen shows that key next to On/Off. */
+	private static Setting.Toggle toggle(String key, Function<ZocularConfig, Boolean> getter, BiConsumer<ZocularConfig, Boolean> setter,
+			KeyMapping mapping) {
+		Setting.Toggle toggle = new Setting.Toggle(key, getter, setter);
+		toggle.keyedTo(mapping);
+		return toggle;
 	}
 
 	private static Setting.Slider slider(String key, float min, float max, float step, Function<Float, Component> format,
