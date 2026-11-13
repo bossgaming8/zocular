@@ -7,24 +7,24 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 
 /**
- * Colors and shared drawing helpers. The amber accent is taken from the Zocular logo.
+ * Colors and shared drawing helpers. The blue accent and cool greys are taken from the Zocular logo.
  */
 public final class Theme {
-	public static final int ACCENT = 0xFFF2A93B;
-	public static final int ACCENT_BRIGHT = 0xFFFFC766;
-	public static final int ON_ACCENT = 0xFF20150A;
+	public static final int ACCENT = 0xFF5CB3F2;
+	public static final int ACCENT_BRIGHT = 0xFF82CBFF;
+	public static final int ON_ACCENT = 0xFF0E1820;
 	public static final int WARNING = 0xFFE9785E;
-	public static final int TEXT = 0xFFF3EEE9;
-	public static final int TEXT_MUTED = 0xFFA79E99;
-	public static final int TEXT_FAINT = 0xFF6F676B;
-	public static final int WINDOW = 0xF0141217;
-	public static final int SIDEBAR = 0xFF0E0D11;
-	public static final int SURFACE = 0xFF1E1B22;
-	public static final int SURFACE_HOVER = 0xFF28242D;
-	public static final int SURFACE_ACTIVE = 0xFF332E38;
-	public static final int TRACK = 0xFF3B3541;
+	public static final int TEXT = 0xFFD4E1F3;
+	public static final int TEXT_MUTED = 0xFF8794A7;
+	public static final int TEXT_FAINT = 0xFF5C646F;
+	public static final int WINDOW = 0xF0121417;
+	public static final int SIDEBAR = 0xFF0D0F11;
+	public static final int SURFACE = 0xFF1B1E22;
+	public static final int SURFACE_HOVER = 0xFF23272D;
+	public static final int SURFACE_ACTIVE = 0xFF2C3138;
+	public static final int TRACK = 0xFF333941;
 	public static final int BORDER = 0x22FFFFFF;
-	public static final int HUD_BACKGROUND = 0xC0141217;
+	public static final int HUD_BACKGROUND = 0xC0121417;
 
 	public static final Identifier ROUNDED = Zocular.id("rounded");
 	public static final Identifier ROUNDED_OUTLINE = Zocular.id("rounded_outline");

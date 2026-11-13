@@ -5,6 +5,7 @@ import dev.bhored.zocular.Zocular;
 import dev.bhored.zocular.compat.IrisShaders;
 import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.config.ZocularConfig.Labeled;
+import dev.bhored.zocular.config.ZocularConfig.LeagueCamera;
 import dev.bhored.zocular.config.ZocularConfig.PanelMode;
 import dev.bhored.zocular.config.ZocularConfig.Reframe;
 import dev.bhored.zocular.config.ZocularConfig.ShaderMode;
@@ -146,6 +147,7 @@ public final class Settings {
 			toggle("path.constant_speed", c -> c.path.constantSpeed, (c, v) -> c.path.constantSpeed = v),
 			toggle("path.ease", c -> c.path.ease, (c, v) -> c.path.ease = v),
 			toggle("path.loop", c -> c.path.loop, (c, v) -> c.path.loop = v),
+			toggle("path.play_along", c -> c.path.playAlong, (c, v) -> c.path.playAlong = v),
 			new Heading("path.presentation"),
 			toggle("path.hide_hud", c -> c.path.hideHud, (c, v) -> c.path.hideHud = v),
 			toggle("path.letterbox", c -> c.path.letterbox, (c, v) -> c.path.letterbox = v),
@@ -157,8 +159,18 @@ public final class Settings {
 		return new Page("camera", Zocular.id("icon/camera"), List.of(
 			new Heading("camera.third_person"),
 			slider("third_person.distance", 0.25F, 4.0F, 0.05F, percent(false), c -> c.thirdPerson.distance, (c, v) -> c.thirdPerson.distance = v),
+			toggle("third_person.far_view", c -> c.thirdPerson.farView, (c, v) -> c.thirdPerson.farView = v),
+			slider("third_person.start_distance", 4.0F, 64.0F, 1.0F, format("blocks", "%.0f"), c -> c.thirdPerson.startDistance, (c, v) -> c.thirdPerson.startDistance = v),
+			slider("third_person.max_distance", 16.0F, 256.0F, 4.0F, format("blocks", "%.0f"), c -> c.thirdPerson.maxDistance, (c, v) -> c.thirdPerson.maxDistance = v),
 			cycle("third_person.shoulder", Shoulder.values(), c -> c.thirdPerson.shoulder, (c, v) -> c.thirdPerson.shoulder = v),
 			slider("third_person.shoulder_offset", 0.25F, 1.5F, 0.05F, format("blocks", "%.2f"), c -> c.thirdPerson.shoulderOffset, (c, v) -> c.thirdPerson.shoulderOffset = v),
+			new Heading("camera.overhead"),
+			slider("overhead.distance", 6.0F, 64.0F, 1.0F, format("blocks", "%.0f"), c -> c.overhead.distance, (c, v) -> c.overhead.distance = v),
+			slider("overhead.angle", 30.0F, 85.0F, 1.0F, format("degrees", "%.0f"), c -> c.overhead.angle, (c, v) -> c.overhead.angle = v),
+			slider("overhead.fov", 20.0F, 90.0F, 1.0F, format("degrees", "%.0f"), c -> c.overhead.fov, (c, v) -> c.overhead.fov = v),
+			toggle("overhead.splash", c -> c.overhead.splash, (c, v) -> c.overhead.splash = v),
+			cycle("overhead.league_camera", LeagueCamera.values(), c -> c.overhead.leagueCamera, (c, v) -> c.overhead.leagueCamera = v),
+			new Note("camera.overhead"),
 			new Heading("camera.roll"),
 			slider("roll.speed", 5.0F, 180.0F, 5.0F, format("degrees_per_second", "%.0f"), c -> c.roll.speed, (c, v) -> c.roll.speed = v),
 			slider("roll.max", 5.0F, 180.0F, 5.0F, format("degrees", "%.0f"), c -> c.roll.max, (c, v) -> c.roll.max = v),

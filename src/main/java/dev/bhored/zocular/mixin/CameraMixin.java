@@ -3,6 +3,7 @@ package dev.bhored.zocular.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.camera.CameraControl;
+import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.camera.Pose;
 import dev.bhored.zocular.config.ZocularConfig;
 import net.minecraft.client.Camera;
@@ -81,7 +82,7 @@ public abstract class CameraMixin {
 
 	@ModifyArg(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
 	private float zocular$thirdPersonDistance(float distance) {
-		return distance * ZocularConfig.get().thirdPerson.distance;
+		return FarView.apply(distance * ZocularConfig.get().thirdPerson.distance);
 	}
 
 	@ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))

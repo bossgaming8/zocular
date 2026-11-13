@@ -4,16 +4,23 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.bhored.zocular.Keybinds;
 import dev.bhored.zocular.Zoom;
 import dev.bhored.zocular.camera.CameraControl;
+import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.config.Settings;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.gui.SettingsScreen;
+import dev.bhored.zocular.hud.Splash;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -40,15 +47,22 @@ public final class ZocularClientTest implements FabricClientGameTest {
 			world.getServer().runCommand("weather clear");
 			world.getServer().runCommand("fill ~5 ~ ~5 ~9 ~6 ~9 minecraft:oak_log");
 			world.getServer().runCommand("fill ~-8 ~ ~3 ~-4 ~3 ~7 minecraft:stone_bricks");
+			world.getServer().runCommand("fill ~-14 ~ ~-10 ~-11 ~4 ~-7 minecraft:oak_planks");
+			world.getServer().runCommand("fill ~8 ~-1 ~-12 ~12 ~-1 ~-8 minecraft:water");
+			world.getServer().runCommand("summon minecraft:sheep ~3 ~ ~-4 {NoAI:1b}");
+			world.getServer().runCommand("summon minecraft:cow ~-3 ~ ~-6 {NoAI:1b}");
 			world.getServer().runCommand("tp @p ~ ~ ~ 45 10");
 			context.waitTicks(20);
 			world.getConnection().waitForChunksRender();
 			context.takeScreenshot("world");
 
 			zoom(context, input);
+			farView(context, input);
 			freecamAndPath(context, input);
 			cinematic(context, input);
 			shoulder(context, input);
+			overhead(context, input, world);
+			league(context, input, world);
 			hudEditor(context, input);
 			settingsPages(context, "ingame");
 		}
@@ -116,6 +130,62 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		check(!context.computeOnClient(minecraft -> Zoom.isVisible()), "zoom should ease back out after releasing the key");
 	}
 
+	/** In third person the Zoom key swings the camera far back, and scrolling takes it further out. */
+	private static void farView(ClientGameTestContext context, TestInput input) {
+		int renderDistance = context.computeOnClient(minecraft -> minecraft.options.renderDistance().get());
+		context.runOnClient(minecraft -> {
+			minecraft.options.renderDistance().set(12);
+			minecraft.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+			minecraft.player.setXRot(40.0F);
+		});
+		context.waitTicks(5);
+		double normal = cameraGap(context);
+		check(normal < 6.0, "vanilla third person should sit close, got " + normal);
+
+		// Hold Zoom the way a player does. A held key sends repeat signals that Minecraft counts as clicks; the
+		// far view must switch on once and stay on, not flick on and off with every repeat.
+		input.holdKey(Keybinds.ZOOM);
+		context.waitTicks(3);
+		for (int i = 0; i < 12; i++) {
+			context.runOnClient(minecraft -> KeyMapping.click(KeyMappingHelper.getBoundKeyOf(Keybinds.ZOOM)));
+			context.waitTicks(1);
+			check(FarView.isPulled(), "holding Zoom must keep the far view on (repeat " + i + ")");
+		}
+		input.releaseKey(Keybinds.ZOOM);
+		context.waitTicks(30);
+		check(FarView.isPulled(), "the far view should stay locked after letting go of Zoom");
+		check(!Zoom.isEngaged(), "the normal zoom must not engage in third person");
+		double pulled = cameraGap(context);
+		check(pulled > 9.0 && pulled < 15.0, "the camera should sit at the 12-block pull-back distance, got " + pulled);
+		context.takeScreenshot("far-view");
+
+		input.scroll(-15.0);
+		context.runOnClient(minecraft -> minecraft.player.setXRot(65.0F));
+		context.waitTicks(40);
+		double far = cameraGap(context);
+		check(far > 60.0, "scrolling should take the camera much further out, got " + far);
+		check(FarView.extraDistance() > 50.0F, "the fog should be pushed out with the camera");
+		context.takeScreenshot("far-view-max");
+
+		input.pressKey(Keybinds.ZOOM);
+		context.waitTicks(30);
+		check(!FarView.isPulled(), "pressing Zoom again should bring the camera back");
+		double back = cameraGap(context);
+		check(back < 6.0, "the camera should be back at the normal distance, got " + back);
+
+		context.runOnClient(minecraft -> {
+			minecraft.options.renderDistance().set(renderDistance);
+			minecraft.options.setCameraType(CameraType.FIRST_PERSON);
+			minecraft.player.setXRot(10.0F);
+		});
+		context.waitTicks(3);
+	}
+
+	private static double cameraGap(ClientGameTestContext context) {
+		return context.computeOnClient(minecraft ->
+			minecraft.gameRenderer.mainCamera().position().distanceTo(minecraft.player.getEyePosition()));
+	}
+
 	private static void freecamAndPath(ClientGameTestContext context, TestInput input) {
 		Vec3 playerBefore = context.computeOnClient(minecraft -> minecraft.player.position());
 		input.pressKey(Keybinds.FREECAM);
@@ -156,6 +226,214 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "freecam should be off");
 		check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
 		check(!context.computeOnClient(minecraft -> minecraft.gui.hud.isHidden()), "the HUD should be visible again");
+
+		pathPlayAlong(context, input);
+	}
+
+	/** With Play while it runs on, the player walks during the shot and gets the camera back when it ends. */
+	private static void pathPlayAlong(ClientGameTestContext context, TestInput input) {
+		ZocularConfig.CameraPath config = ZocularConfig.get().path;
+		boolean previousPlayAlong = config.playAlong;
+		float previousDuration = config.duration;
+		config.playAlong = true;
+		config.duration = 3.0F;
+		try {
+			input.pressKey(Keybinds.FREECAM);
+			context.waitTicks(2);
+			input.holdKeyFor(options -> options.keyJump, 10);
+			input.pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+			input.holdKeyFor(options -> options.keyRight, 10);
+			check(CameraControl.get().path().size() >= 2, "the path should have keyframes to play");
+
+			Vec3 before = context.computeOnClient(minecraft -> minecraft.player.position());
+			input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+			context.waitTicks(2);
+			check(CameraControl.get().playingAlong(), "the player should have control while the path plays");
+			check(!CameraControl.get().capturesLook(), "the mouse should turn the player again");
+
+			input.holdKeyFor(options -> options.keyUp, 20);
+			Vec3 after = context.computeOnClient(minecraft -> minecraft.player.position());
+			check(after.distanceTo(before) > 1.0, "the player should walk during the shot, moved " + after.distanceTo(before));
+			check(CameraControl.get().mode() == CameraControl.Mode.FREECAM, "the shot should still be running");
+			double gap = context.computeOnClient(minecraft ->
+				minecraft.gameRenderer.mainCamera().position().distanceTo(minecraft.player.getEyePosition()));
+			check(gap > 0.5, "the camera should stay on the path, not on the player, gap " + gap);
+			context.takeScreenshot("path-play-along");
+
+			context.waitTicks(50);
+			check(CameraControl.get().mode() == CameraControl.Mode.NONE, "the camera should come back to the player when the shot ends");
+			check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
+			check(!context.computeOnClient(minecraft -> minecraft.gui.hud.isHidden()), "the HUD should be visible again");
+		} finally {
+			config.playAlong = previousPlayAlong;
+			config.duration = previousDuration;
+		}
+	}
+
+	/**
+	 * The overhead view: put the cursor over a block on screen, click to mine it, click again to build there,
+	 * and check that W walks up the screen.
+	 */
+	private static void overhead(ClientGameTestContext context, TestInput input, TestSingleplayerContext world) {
+		world.getServer().runCommand("gamemode creative @a");
+		world.getServer().runCommand("tp @p 0.5 -60 20.5 0 10");
+		world.getServer().runCommand("setblock 2 -60 20 minecraft:gold_block");
+		world.getServer().runCommand("clear @p");
+		world.getServer().runCommand("give @p minecraft:oak_planks 16");
+		input.pressKey(options -> options.keyHotbarSlots[0]);
+		context.waitTicks(10);
+		BlockPos gold = new BlockPos(2, -60, 20);
+
+		input.pressKey(Keybinds.OVERHEAD);
+		context.waitTicks(16);
+		check(CameraControl.get().mode() == CameraControl.Mode.OVERHEAD, "the overhead view should be on");
+		check(Splash.isShowing(), "the Zocular title should show when the overhead view switches on");
+		context.takeScreenshot("overhead-splash");
+		context.waitTicks(40);
+		check(!Splash.isShowing(), "the title should be gone after a couple of seconds");
+		check(!context.computeOnClient(minecraft -> minecraft.mouseHandler.isMouseGrabbed()), "the cursor should be free");
+
+		double[] onGold = project(context, Vec3.atCenterOf(gold).add(0.0, 0.5, 0.0));
+		input.setCursorPos(onGold[0], onGold[1]);
+		context.waitTicks(3);
+		BlockPos aimed = context.computeOnClient(minecraft ->
+			minecraft.hitResult instanceof BlockHitResult hit ? hit.getBlockPos() : null);
+		check(gold.equals(aimed), "the cursor should point the player at the gold block, got " + aimed);
+		context.takeScreenshot("overhead");
+
+		input.pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+		context.waitTicks(5);
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(gold).isAir()), "clicking should mine the block under the cursor");
+		check(!context.computeOnClient(minecraft -> minecraft.mouseHandler.isMouseGrabbed()), "clicking must not grab the mouse");
+
+		double[] onGround = project(context, Vec3.atCenterOf(gold).subtract(0.0, 0.5, 0.0));
+		input.setCursorPos(onGround[0], onGround[1]);
+		context.waitTicks(3);
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(5);
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(gold).is(Blocks.OAK_PLANKS)), "right-clicking should place a block where the cursor is");
+		context.takeScreenshot("overhead-built");
+
+		input.pressKey(Keybinds.ROLL_RIGHT);
+		context.waitTicks(20);
+		Vec3 before = context.computeOnClient(minecraft -> minecraft.player.position());
+		float cameraYaw = CameraControl.get().overhead().yaw();
+		input.holdKeyFor(options -> options.keyUp, 20);
+		Vec3 moved = context.computeOnClient(minecraft -> minecraft.player.position()).subtract(before).multiply(1.0, 0.0, 1.0);
+		Vec3 up = Vec3.directionFromRotation(0.0F, cameraYaw);
+		check(moved.length() > 1.0, "W should walk, moved " + moved.length());
+		check(moved.normalize().dot(up) > 0.85, "W should walk up the screen, dot " + moved.normalize().dot(up));
+		context.takeScreenshot("overhead-walked");
+
+		input.pressKey(Keybinds.OVERHEAD);
+		context.waitTicks(3);
+		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "the overhead view should be off");
+		check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
+		world.getServer().runCommand("clear @p");
+	}
+
+	/**
+	 * League mode: right-click walks there, Shift + right-click builds, the Free camera pans at the screen edge and
+	 * comes back on middle-click, and Auto-turn swings round behind the way you walk.
+	 */
+	private static void league(ClientGameTestContext context, TestInput input, TestSingleplayerContext world) {
+		world.getServer().runCommand("gamemode creative @a");
+		world.getServer().runCommand("tp @p 0.5 -60 30.5 0 10");
+		world.getServer().runCommand("clear @p");
+		world.getServer().runCommand("give @p minecraft:oak_planks 16");
+		input.pressKey(options -> options.keyHotbarSlots[0]);
+		ZocularConfig.get().overhead.leagueCamera = ZocularConfig.LeagueCamera.FOLLOW;
+		context.waitTicks(10);
+
+		input.pressKey(Keybinds.LEAGUE);
+		context.waitTicks(30);
+		check(CameraControl.get().leagueActive(), "League mode should be on");
+
+		// Right-click the ground a few blocks away: the player walks there by themselves.
+		double[] spot = project(context, new Vec3(4.5, -60.0, 34.5));
+		input.setCursorPos(spot[0], spot[1]);
+		context.waitTicks(3);
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(8);
+		check(CameraControl.get().overhead().walkMarker() != null, "right-click should set a place to walk to");
+		context.takeScreenshot("league-walking");
+		context.waitTicks(60);
+		Vec3 at = context.computeOnClient(minecraft -> minecraft.player.position());
+		double off = Math.hypot(at.x - 4.5, at.z - 34.5);
+		check(off < 1.0, "the player should have walked to the clicked spot, still " + off + " away");
+		check(CameraControl.get().overhead().walkMarker() == null, "walking should stop on arrival");
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(new BlockPos(4, -60, 34)).isAir()), "a plain right-click must not place a block");
+
+		// Shift + right-click builds instead of walking.
+		double[] buildSpot = project(context, new Vec3(6.5, -60.0, 34.5));
+		input.setCursorPos(buildSpot[0], buildSpot[1]);
+		context.waitTicks(3);
+		input.holdKey(options -> options.keyShift);
+		context.waitTicks(2);
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(4);
+		input.releaseKey(options -> options.keyShift);
+		check(context.computeOnClient(minecraft -> minecraft.level.getBlockState(new BlockPos(6, -60, 34)).is(Blocks.OAK_PLANKS)), "Shift + right-click should place a block");
+		check(CameraControl.get().overhead().walkMarker() == null, "Shift + right-click must not start walking");
+
+		// R: Free camera. Pushing the cursor to the right edge pans; the player stays put.
+		input.pressKey(Keybinds.NEXT_SHOT);
+		context.waitTicks(20);
+		check(CameraControl.get().overhead().camera() == ZocularConfig.LeagueCamera.FREE, "R should switch to the Free camera");
+		Vec3 cameraBefore = context.computeOnClient(minecraft -> minecraft.gameRenderer.mainCamera().position());
+		Vec3 playerBefore = context.computeOnClient(minecraft -> minecraft.player.position());
+		double[] screen = context.computeOnClient(minecraft -> new double[] {minecraft.getWindow().getScreenWidth(), minecraft.getWindow().getScreenHeight()});
+		input.setCursorPos(screen[0] - 1.0, screen[1] / 2.0);
+		context.waitTicks(30);
+		Vec3 cameraAfter = context.computeOnClient(minecraft -> minecraft.gameRenderer.mainCamera().position());
+		check(cameraAfter.distanceTo(cameraBefore) > 3.0, "the Free camera should pan at the screen edge, moved " + cameraAfter.distanceTo(cameraBefore));
+		check(context.computeOnClient(minecraft -> minecraft.player.position()).distanceTo(playerBefore) < 0.2, "panning must not move the player");
+		input.setCursorPos(screen[0] / 2.0, screen[1] / 2.0);
+		context.waitTicks(2);
+		context.takeScreenshot("league-free");
+
+		// Middle-click brings it back over the player.
+		input.pressMouse(InputConstants.MOUSE_BUTTON_MIDDLE);
+		context.waitTicks(40);
+		double back = context.computeOnClient(minecraft -> minecraft.gameRenderer.mainCamera().position().distanceTo(cameraBefore));
+		check(back < 1.5, "middle-click should bring the camera back, still " + back + " away");
+
+		// R again: Auto-turn. Walking off to the side swings the camera round.
+		input.pressKey(Keybinds.NEXT_SHOT);
+		context.waitTicks(10);
+		check(CameraControl.get().overhead().camera() == ZocularConfig.LeagueCamera.AUTO_TURN, "R should switch to Auto-turn");
+		float yawBefore = CameraControl.get().overhead().yaw();
+		input.setCursorPos(screen[0] * 0.9, screen[1] * 0.5);
+		context.waitTicks(3);
+		input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+		context.waitTicks(40);
+		float turned = Math.abs(net.minecraft.util.Mth.wrapDegrees(CameraControl.get().overhead().yaw() - yawBefore));
+		check(turned > 15.0F, "Auto-turn should swing the camera behind the walk, turned " + turned);
+		context.takeScreenshot("league-auto-turn");
+
+		input.pressKey(Keybinds.LEAGUE);
+		context.waitTicks(3);
+		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "League mode should be off");
+		ZocularConfig.get().overhead.leagueCamera = ZocularConfig.LeagueCamera.FOLLOW;
+		world.getServer().runCommand("clear @p");
+	}
+
+	/** Where a world point lands on screen, in window pixels, using the camera the game actually rendered. */
+	private static double[] project(ClientGameTestContext context, Vec3 point) {
+		return context.computeOnClient(minecraft -> {
+			Camera camera = minecraft.gameRenderer.mainCamera();
+			Vec3 forward = new Vec3(camera.forwardVector().x(), camera.forwardVector().y(), camera.forwardVector().z());
+			Vec3 up = new Vec3(camera.upVector().x(), camera.upVector().y(), camera.upVector().z());
+			Vec3 right = new Vec3(-camera.leftVector().x(), -camera.leftVector().y(), -camera.leftVector().z());
+			Vec3 offset = point.subtract(camera.position());
+			double depth = offset.dot(forward);
+			double width = minecraft.getWindow().getScreenWidth();
+			double height = minecraft.getWindow().getScreenHeight();
+			double tan = Math.tan(Math.toRadians(camera.getFov()) / 2.0);
+			double x = offset.dot(right) / (depth * tan * width / height);
+			double y = offset.dot(up) / (depth * tan);
+			return new double[] {(x + 1.0) / 2.0 * width, (1.0 - y) / 2.0 * height};
+		});
 	}
 
 	private static void cinematic(ClientGameTestContext context, TestInput input) {

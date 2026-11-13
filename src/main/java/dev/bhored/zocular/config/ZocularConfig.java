@@ -22,7 +22,7 @@ public final class ZocularConfig {
 
 	public static final ZocularConfig DEFAULTS = new ZocularConfig();
 	/** Bumped whenever default key bindings change, so older bindings can be moved over once. */
-	public static final int KEY_LAYOUT = 2;
+	public static final int KEY_LAYOUT = 3;
 	private static ZocularConfig current = new ZocularConfig();
 
 	public Integer keyLayout;
@@ -32,6 +32,7 @@ public final class ZocularConfig {
 	public Freecam freecam = new Freecam();
 	public CameraPath path = new CameraPath();
 	public ThirdPerson thirdPerson = new ThirdPerson();
+	public Overhead overhead = new Overhead();
 	public Roll roll = new Roll();
 	public Hud hud = new Hud();
 
@@ -79,6 +80,7 @@ public final class ZocularConfig {
 		if (freecam == null) freecam = new Freecam();
 		if (path == null) path = new CameraPath();
 		if (thirdPerson == null) thirdPerson = new ThirdPerson();
+		if (overhead == null) overhead = new Overhead();
 		if (roll == null) roll = new Roll();
 		if (hud == null) hud = new Hud();
 		if (hud.positions == null) hud.positions = new LinkedHashMap<>();
@@ -131,14 +133,26 @@ public final class ZocularConfig {
 		public boolean ease = true;
 		public boolean loop = false;
 		public boolean constantSpeed = true;
+		public boolean playAlong = false;
 		public boolean hideHud = true;
 		public boolean letterbox = true;
 	}
 
 	public static final class ThirdPerson {
 		public float distance = 1.0F;
+		public boolean farView = true;
+		public float startDistance = 12.0F;
+		public float maxDistance = 96.0F;
 		public Shoulder shoulder = Shoulder.CENTER;
 		public float shoulderOffset = 0.75F;
+	}
+
+	public static final class Overhead {
+		public float distance = 18.0F;
+		public float angle = 55.0F;
+		public float fov = 50.0F;
+		public boolean splash = true;
+		public LeagueCamera leagueCamera = LeagueCamera.FOLLOW;
 	}
 
 	public static final class Roll {
@@ -218,6 +232,14 @@ public final class ZocularConfig {
 		CENTER, RIGHT, LEFT;
 
 		public Shoulder next() {
+			return values()[(ordinal() + 1) % values().length];
+		}
+	}
+
+	public enum LeagueCamera implements Labeled {
+		FOLLOW, FREE, AUTO_TURN;
+
+		public LeagueCamera next() {
 			return values()[(ordinal() + 1) % values().length];
 		}
 	}
