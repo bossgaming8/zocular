@@ -146,6 +146,7 @@ public final class Settings {
 			toggle("path.constant_speed", c -> c.path.constantSpeed, (c, v) -> c.path.constantSpeed = v),
 			toggle("path.ease", c -> c.path.ease, (c, v) -> c.path.ease = v),
 			toggle("path.loop", c -> c.path.loop, (c, v) -> c.path.loop = v),
+			toggle("path.play_along", c -> c.path.playAlong, (c, v) -> c.path.playAlong = v),
 			new Heading("path.presentation"),
 			toggle("path.hide_hud", c -> c.path.hideHud, (c, v) -> c.path.hideHud = v),
 			toggle("path.letterbox", c -> c.path.letterbox, (c, v) -> c.path.letterbox = v),

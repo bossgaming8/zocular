@@ -50,6 +50,11 @@ public final class CameraControl {
 	private boolean leaving;
 	private boolean finishPending;
 
+	private boolean playAlong;
+	private boolean holdingStartClick;
+	private boolean exitPending;
+	private @Nullable Pose lastPathPose;
+
 	private float roll;
 	private boolean levellingRoll;
 	private long lastFrame;
@@ -111,7 +116,7 @@ public final class CameraControl {
 			stopAll(minecraft);
 			return;
 		}
-		if (mode == Mode.FREECAM && ZocularConfig.get().freecam.exitWhenHurt && player.hurtTime > lastHurtTime) {
+		if (mode == Mode.FREECAM && !playingAlong() && ZocularConfig.get().freecam.exitWhenHurt && player.hurtTime > lastHurtTime) {
 			exitFreecam(minecraft);
 			Notices.show(Component.translatable("zocular.notice.freecam_hurt"));
 		}
@@ -123,6 +128,12 @@ public final class CameraControl {
 		if (finishPending) {
 			finishPending = false;
 			endCinematic(minecraft);
+		}
+		if (exitPending) {
+			exitPending = false;
+			if (mode == Mode.FREECAM) {
+				exitFreecam(minecraft);
+			}
 		}
 	}
 
@@ -148,7 +159,14 @@ public final class CameraControl {
 		if (path.isPlaying()) {
 			Pose pose = path.current(partialTicks);
 			if (pose != null) {
+				lastPathPose = pose;
 				return pose;
+			}
+			if (playAlong && lastPathPose != null) {
+				// The player kept playing through the shot, so hand the camera back to them rather than
+				// leaving them frozen in freecam. The switch happens before the next frame is placed.
+				exitPending = true;
+				return lastPathPose;
 			}
 			endPlayback(minecraft);
 		}
@@ -214,6 +232,10 @@ public final class CameraControl {
 
 	private void exitFreecam(Minecraft minecraft) {
 		path.stop();
+		playAlong = false;
+		holdingStartClick = false;
+		exitPending = false;
+		lastPathPose = null;
 		release(minecraft);
 		mode = Mode.NONE;
 	}
@@ -308,7 +330,10 @@ public final class CameraControl {
 		while (minecraft.options.keyTogglePerspective.consumeClick()) {
 			// The perspective is ours while a camera mode runs.
 		}
-		if (mode != Mode.FREECAM) {
+		if (holdingStartClick && !minecraft.options.keyUse.isDown()) {
+			holdingStartClick = false;
+		}
+		if (mode != Mode.FREECAM || playingAlong()) {
 			return;
 		}
 
@@ -339,6 +364,10 @@ public final class CameraControl {
 			Notices.show(Component.translatable("zocular.notice.path_too_short"));
 			return;
 		}
+		playAlong = ZocularConfig.get().path.playAlong;
+		// The Use press that started the shot must not also reach the world once the player has control.
+		holdingStartClick = playAlong;
+		lastPathPose = null;
 		if (ZocularConfig.get().path.hideHud) {
 			hideHud(minecraft);
 		}
@@ -346,6 +375,8 @@ public final class CameraControl {
 
 	private void endPlayback(Minecraft minecraft) {
 		path.stop();
+		playAlong = false;
+		holdingStartClick = false;
 		restoreHud(minecraft);
 	}
 
@@ -390,7 +421,7 @@ public final class CameraControl {
 
 	/** Mouse look goes to the free camera instead of the player. */
 	public boolean capturesLook() {
-		return mode == Mode.FREECAM;
+		return mode == Mode.FREECAM && !playingAlong();
 	}
 
 	public void turn(double dx, double dy) {
@@ -403,12 +434,17 @@ public final class CameraControl {
 		return mode == Mode.CINEMATIC && !leaving ? ZocularConfig.get().cinematic.lookSensitivity : 1.0F;
 	}
 
+	/** True while a camera path plays and the player has been handed back their own controls. */
+	public boolean playingAlong() {
+		return mode == Mode.FREECAM && playAlong && path.isPlaying();
+	}
+
 	public boolean freezesPlayer() {
-		return mode == Mode.FREECAM;
+		return mode == Mode.FREECAM && !playingAlong();
 	}
 
 	public boolean blocksInteraction() {
-		return mode == Mode.FREECAM;
+		return mode == Mode.FREECAM && (!playingAlong() || holdingStartClick);
 	}
 
 	/** True when the camera sits inside the player, where rendering them would only block the view. */

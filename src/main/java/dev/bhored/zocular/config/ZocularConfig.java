@@ -131,6 +131,7 @@ public final class ZocularConfig {
 		public boolean ease = true;
 		public boolean loop = false;
 		public boolean constantSpeed = true;
+		public boolean playAlong = false;
 		public boolean hideHud = true;
 		public boolean letterbox = true;
 	}

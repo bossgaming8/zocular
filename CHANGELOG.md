@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Camera paths can now play while you keep playing: turn on Camera Path > Play while it runs, set your keyframes in freecam and press Use. During the shot, your movement, mouse and clicks go to your player, so you can walk, build or fight on camera. Freecam (<kbd>F4</kbd>) stops the shot, and when it ends the camera comes back to you.
+
 ## 2.1.0 (Minecraft 26.3)
 
 **Cinematic camera**

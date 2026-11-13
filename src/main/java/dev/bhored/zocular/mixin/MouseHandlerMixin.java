@@ -52,7 +52,7 @@ public abstract class MouseHandlerMixin {
 		}
 
 		CameraControl control = CameraControl.get();
-		if (control.mode() == CameraControl.Mode.FREECAM) {
+		if (control.mode() == CameraControl.Mode.FREECAM && !control.playingAlong()) {
 			if (!control.path().isPlaying()) {
 				control.adjustFreecamSpeed(amount);
 			}

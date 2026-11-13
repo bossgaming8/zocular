@@ -156,6 +156,48 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		check(CameraControl.get().mode() == CameraControl.Mode.NONE, "freecam should be off");
 		check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
 		check(!context.computeOnClient(minecraft -> minecraft.gui.hud.isHidden()), "the HUD should be visible again");
+
+		pathPlayAlong(context, input);
+	}
+
+	/** With Play while it runs on, the player walks during the shot and gets the camera back when it ends. */
+	private static void pathPlayAlong(ClientGameTestContext context, TestInput input) {
+		ZocularConfig.CameraPath config = ZocularConfig.get().path;
+		boolean previousPlayAlong = config.playAlong;
+		float previousDuration = config.duration;
+		config.playAlong = true;
+		config.duration = 3.0F;
+		try {
+			input.pressKey(Keybinds.FREECAM);
+			context.waitTicks(2);
+			input.holdKeyFor(options -> options.keyJump, 10);
+			input.pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+			input.holdKeyFor(options -> options.keyRight, 10);
+			check(CameraControl.get().path().size() >= 2, "the path should have keyframes to play");
+
+			Vec3 before = context.computeOnClient(minecraft -> minecraft.player.position());
+			input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+			context.waitTicks(2);
+			check(CameraControl.get().playingAlong(), "the player should have control while the path plays");
+			check(!CameraControl.get().capturesLook(), "the mouse should turn the player again");
+
+			input.holdKeyFor(options -> options.keyUp, 20);
+			Vec3 after = context.computeOnClient(minecraft -> minecraft.player.position());
+			check(after.distanceTo(before) > 1.0, "the player should walk during the shot, moved " + after.distanceTo(before));
+			check(CameraControl.get().mode() == CameraControl.Mode.FREECAM, "the shot should still be running");
+			double gap = context.computeOnClient(minecraft ->
+				minecraft.gameRenderer.mainCamera().position().distanceTo(minecraft.player.getEyePosition()));
+			check(gap > 0.5, "the camera should stay on the path, not on the player, gap " + gap);
+			context.takeScreenshot("path-play-along");
+
+			context.waitTicks(50);
+			check(CameraControl.get().mode() == CameraControl.Mode.NONE, "the camera should come back to the player when the shot ends");
+			check(context.computeOnClient(minecraft -> minecraft.options.getCameraType()) == CameraType.FIRST_PERSON, "first person should be restored");
+			check(!context.computeOnClient(minecraft -> minecraft.gui.hud.isHidden()), "the HUD should be visible again");
+		} finally {
+			config.playAlong = previousPlayAlong;
+			config.duration = previousDuration;
+		}
 	}
 
 	private static void cinematic(ClientGameTestContext context, TestInput input) {
