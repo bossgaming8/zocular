@@ -141,6 +141,7 @@ public final class ZocularConfig {
 	public static final class ThirdPerson {
 		public float distance = 1.0F;
 		public boolean farView = true;
+		public float startDistance = 12.0F;
 		public float maxDistance = 96.0F;
 		public Shoulder shoulder = Shoulder.CENTER;
 		public float shoulderOffset = 0.75F;

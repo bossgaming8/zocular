@@ -157,6 +157,8 @@
 	"zocular.option.third_person.distance.desc": "Scales how far the third-person camera sits from you.",
 	"zocular.option.third_person.far_view": "Zoom key pulls the camera back",
 	"zocular.option.third_person.far_view.desc": "In third person (F5), the Zoom key swings the camera far out behind you instead of zooming in. Scroll to move it further out or back in, and press Zoom again to come back.",
+	"zocular.option.third_person.start_distance": "Pull-back distance",
+	"zocular.option.third_person.start_distance.desc": "How far back the camera goes when you press Zoom in third person. It stays there until you press Zoom again; scroll to move it for that one time.",
 	"zocular.option.third_person.max_distance": "Furthest pull-back",
 	"zocular.option.third_person.max_distance.desc": "How far out the pulled-back camera can go. Blocks behind you still pull it in, so look down for the furthest view. The world only draws as far as your render distance, so very far views need a high one.",
 	"zocular.option.overhead.distance": "Overhead height",

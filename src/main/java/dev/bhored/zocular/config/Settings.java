@@ -159,6 +159,7 @@ public final class Settings {
 			new Heading("camera.third_person"),
 			slider("third_person.distance", 0.25F, 4.0F, 0.05F, percent(false), c -> c.thirdPerson.distance, (c, v) -> c.thirdPerson.distance = v),
 			toggle("third_person.far_view", c -> c.thirdPerson.farView, (c, v) -> c.thirdPerson.farView = v),
+			slider("third_person.start_distance", 4.0F, 64.0F, 1.0F, format("blocks", "%.0f"), c -> c.thirdPerson.startDistance, (c, v) -> c.thirdPerson.startDistance = v),
 			slider("third_person.max_distance", 16.0F, 256.0F, 4.0F, format("blocks", "%.0f"), c -> c.thirdPerson.maxDistance, (c, v) -> c.thirdPerson.maxDistance = v),
 			cycle("third_person.shoulder", Shoulder.values(), c -> c.thirdPerson.shoulder, (c, v) -> c.thirdPerson.shoulder = v),
 			slider("third_person.shoulder_offset", 0.25F, 1.5F, 0.05F, format("blocks", "%.2f"), c -> c.thirdPerson.shoulderOffset, (c, v) -> c.thirdPerson.shoulderOffset = v),

@@ -4,6 +4,7 @@ import dev.bhored.zocular.camera.CameraControl;
 import dev.bhored.zocular.camera.FarView;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.config.ZocularConfig.ZoomMode;
+import dev.bhored.zocular.util.Keys;
 import dev.bhored.zocular.util.Motion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -31,15 +32,13 @@ public final class Zoom {
 		ZocularConfig.Zoom config = ZocularConfig.get().zoom;
 		boolean wanted;
 		if (CameraControl.get().mode() == CameraControl.Mode.OVERHEAD) {
-			// Zoom is held to change the overhead camera height instead.
-			while (Keybinds.ZOOM.consumeClick()) {
-				// Only whether the key is down matters here.
-			}
+			// Zoom is held to change the overhead camera height instead; only whether it is down matters.
+			Keys.pressed(Keybinds.ZOOM);
 			toggled = false;
 			wanted = false;
 		} else if (FarView.applies(minecraft)) {
-			// In third person the Zoom key pulls the camera back instead.
-			while (Keybinds.ZOOM.consumeClick()) {
+			// In third person the Zoom key pulls the camera back instead, and holding it keeps it there.
+			if (Keys.pressed(Keybinds.ZOOM)) {
 				FarView.toggle();
 			}
 			toggled = false;
@@ -75,16 +74,15 @@ public final class Zoom {
 
 	private static boolean readKey(ZoomMode mode) {
 		if (mode == ZoomMode.TOGGLE) {
-			while (Keybinds.ZOOM.consumeClick()) {
+			if (Keys.pressed(Keybinds.ZOOM)) {
 				toggled = !toggled;
 			}
 			return toggled;
 		}
 
 		toggled = false;
-		while (Keybinds.ZOOM.consumeClick()) {
-			// Hold mode only cares whether the key is down; drop queued presses.
-		}
+		// Hold mode only cares whether the key is down; this drops queued presses.
+		Keys.pressed(Keybinds.ZOOM);
 		return Keybinds.ZOOM.isDown();
 	}
 

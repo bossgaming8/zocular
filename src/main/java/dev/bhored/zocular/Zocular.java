@@ -5,6 +5,7 @@ import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.gui.SettingsScreen;
 import dev.bhored.zocular.hud.Overlay;
+import dev.bhored.zocular.util.Keys;
 import java.util.function.Function;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -64,7 +65,7 @@ public final class Zocular implements ClientModInitializer {
 			minecraft.gui.setScreen(pendingScreen.apply(minecraft.gui.screen()));
 			pendingScreen = null;
 		}
-		while (Keybinds.SETTINGS.consumeClick()) {
+		if (Keys.pressed(Keybinds.SETTINGS)) {
 			minecraft.gui.setScreen(new SettingsScreen(null));
 		}
 		CameraControl.get().tick(minecraft);

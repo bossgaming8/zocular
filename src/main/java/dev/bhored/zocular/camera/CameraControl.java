@@ -85,41 +85,37 @@ public final class CameraControl {
 	}
 
 	public void tick(Minecraft minecraft) {
-		while (Keybinds.FREECAM.consumeClick()) {
+		if (Keys.pressed(Keybinds.FREECAM)) {
 			toggleFreecam(minecraft);
 		}
-		while (Keybinds.CINEMATIC.consumeClick()) {
+		if (Keys.pressed(Keybinds.CINEMATIC)) {
 			toggleCinematic(minecraft);
 		}
-		while (Keybinds.OVERHEAD.consumeClick()) {
+		if (Keys.pressed(Keybinds.OVERHEAD)) {
 			toggleOverhead(minecraft);
 		}
 		// The roll keys turn the overhead camera a step at a time; elsewhere they are read while held.
-		while (Keybinds.ROLL_LEFT.consumeClick()) {
-			if (mode == Mode.OVERHEAD) {
-				overhead.turn(-1);
-			}
+		if (Keys.pressed(Keybinds.ROLL_LEFT) && mode == Mode.OVERHEAD) {
+			overhead.turn(-1);
 		}
-		while (Keybinds.ROLL_RIGHT.consumeClick()) {
-			if (mode == Mode.OVERHEAD) {
-				overhead.turn(1);
-			}
+		if (Keys.pressed(Keybinds.ROLL_RIGHT) && mode == Mode.OVERHEAD) {
+			overhead.turn(1);
 		}
-		while (Keybinds.NEXT_SHOT.consumeClick()) {
+		if (Keys.pressed(Keybinds.NEXT_SHOT)) {
 			if (mode == Mode.CINEMATIC && !leaving && owner != null) {
 				director.nextShot(minecraft.level, owner, 1.0F);
 			}
 		}
-		while (Keybinds.ROLL_RESET.consumeClick()) {
+		if (Keys.pressed(Keybinds.ROLL_RESET)) {
 			levellingRoll = true;
 		}
-		while (Keybinds.FREECAM_PANEL.consumeClick()) {
+		if (Keys.pressed(Keybinds.FREECAM_PANEL)) {
 			if (mode == Mode.FREECAM) {
 				ZocularConfig.Hud hud = ZocularConfig.get().hud;
 				hud.freecamPanel = hud.freecamPanel == PanelMode.FULL ? PanelMode.COMPACT : PanelMode.FULL;
 			}
 		}
-		while (Keybinds.SHOULDER.consumeClick()) {
+		if (Keys.pressed(Keybinds.SHOULDER)) {
 			ZocularConfig.ThirdPerson thirdPerson = ZocularConfig.get().thirdPerson;
 			thirdPerson.shoulder = thirdPerson.shoulder.next();
 			Notices.show(Component.translatable("zocular.notice.shoulder", thirdPerson.shoulder.label()));

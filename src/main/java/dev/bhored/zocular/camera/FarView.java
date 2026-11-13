@@ -19,7 +19,7 @@ public final class FarView {
 	private static final float PULL_SECONDS = 0.45F;
 
 	private static boolean pulled;
-	private static float distance = 24.0F;
+	private static float distance = 12.0F;
 	private static float pull;
 	private static double shownLog = Math.log(distance);
 	private static float extra;
@@ -37,6 +37,8 @@ public final class FarView {
 	public static void toggle() {
 		pulled = !pulled;
 		if (pulled) {
+			ZocularConfig.ThirdPerson config = ZocularConfig.get().thirdPerson;
+			distance = Mth.clamp(config.startDistance, MIN_DISTANCE, config.maxDistance);
 			showDistance();
 		}
 	}

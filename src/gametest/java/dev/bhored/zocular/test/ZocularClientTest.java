@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
@@ -140,15 +141,24 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		double normal = cameraGap(context);
 		check(normal < 6.0, "vanilla third person should sit close, got " + normal);
 
-		input.pressKey(Keybinds.ZOOM);
+		// Hold Zoom the way a player does. A held key sends repeat signals that Minecraft counts as clicks; the
+		// far view must switch on once and stay on, not flick on and off with every repeat.
+		input.holdKey(Keybinds.ZOOM);
+		context.waitTicks(3);
+		for (int i = 0; i < 12; i++) {
+			context.runOnClient(minecraft -> KeyMapping.click(KeyMappingHelper.getBoundKeyOf(Keybinds.ZOOM)));
+			context.waitTicks(1);
+			check(FarView.isPulled(), "holding Zoom must keep the far view on (repeat " + i + ")");
+		}
+		input.releaseKey(Keybinds.ZOOM);
 		context.waitTicks(30);
-		check(FarView.isPulled(), "the Zoom key should pull the camera back in third person");
+		check(FarView.isPulled(), "the far view should stay locked after letting go of Zoom");
 		check(!Zoom.isEngaged(), "the normal zoom must not engage in third person");
 		double pulled = cameraGap(context);
-		check(pulled > 18.0, "the camera should be far back, got " + pulled);
+		check(pulled > 9.0 && pulled < 15.0, "the camera should sit at the 12-block pull-back distance, got " + pulled);
 		context.takeScreenshot("far-view");
 
-		input.scroll(-12.0);
+		input.scroll(-15.0);
 		context.runOnClient(minecraft -> minecraft.player.setXRot(65.0F));
 		context.waitTicks(40);
 		double far = cameraGap(context);
