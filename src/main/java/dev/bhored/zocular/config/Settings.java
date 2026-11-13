@@ -18,7 +18,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -36,10 +39,26 @@ public final class Settings {
 		}
 	}
 
-	public record Note(String key) implements Entry {
-		public Component text() {
-			return Component.translatable("zocular.note." + key);
+	/** Help text. Keys named in it are filled in from the player's current bindings, never written into the text. */
+	public record Note(String key, Supplier<Object[]> args) implements Entry {
+		public Note(String key) {
+			this(key, () -> new Object[0]);
 		}
+
+		public Component text() {
+			return Component.translatable("zocular.note." + key, args.get());
+		}
+	}
+
+	/** The key currently bound to a mapping, or "Not bound". */
+	static Component keyName(KeyMapping mapping) {
+		return mapping.isUnbound() ? Component.translatable("zocular.settings.unbound") : mapping.getTranslatedKeyMessage();
+	}
+
+	private static Component moveKeys() {
+		Options o = Minecraft.getInstance().options;
+		return Component.empty().append(keyName(o.keyUp)).append(" ").append(keyName(o.keyLeft)).append(" ")
+			.append(keyName(o.keyDown)).append(" ").append(keyName(o.keyRight));
 	}
 
 	public record Binding(KeyMapping mapping) implements Entry {
@@ -151,7 +170,10 @@ public final class Settings {
 			new Heading("path.presentation"),
 			toggle("path.hide_hud", c -> c.path.hideHud, (c, v) -> c.path.hideHud = v),
 			toggle("path.letterbox", c -> c.path.letterbox, (c, v) -> c.path.letterbox = v),
-			new Note("path.how_to")
+			new Note("path.how_to", () -> {
+				Options o = Minecraft.getInstance().options;
+				return new Object[] {keyName(o.keyAttack), keyName(o.keyUse), keyName(o.keyPickItem), keyName(o.keyShift)};
+			})
 		));
 	}
 
@@ -170,7 +192,10 @@ public final class Settings {
 			slider("overhead.fov", 20.0F, 90.0F, 1.0F, format("degrees", "%.0f"), c -> c.overhead.fov, (c, v) -> c.overhead.fov = v),
 			toggle("overhead.splash", c -> c.overhead.splash, (c, v) -> c.overhead.splash = v),
 			cycle("overhead.league_camera", LeagueCamera.values(), c -> c.overhead.leagueCamera, (c, v) -> c.overhead.leagueCamera = v),
-			new Note("camera.overhead"),
+			new Note("camera.overhead", () -> new Object[] {
+				keyName(Keybinds.OVERHEAD), moveKeys(), keyName(Keybinds.ROLL_LEFT), keyName(Keybinds.ROLL_RIGHT), keyName(Keybinds.ZOOM),
+				keyName(Keybinds.LEAGUE), keyName(Minecraft.getInstance().options.keyShift), keyName(Keybinds.NEXT_SHOT)
+			}),
 			new Heading("camera.roll"),
 			slider("roll.speed", 5.0F, 180.0F, 5.0F, format("degrees_per_second", "%.0f"), c -> c.roll.speed, (c, v) -> c.roll.speed = v),
 			slider("roll.max", 5.0F, 180.0F, 5.0F, format("degrees", "%.0f"), c -> c.roll.max, (c, v) -> c.roll.max = v),
@@ -198,7 +223,10 @@ public final class Settings {
 			entries.add(new Binding(mapping));
 		}
 		entries.add(new Heading("controls.freecam"));
-		entries.add(new Note("controls.freecam"));
+		entries.add(new Note("controls.freecam", () -> {
+			Options o = Minecraft.getInstance().options;
+			return new Object[] {keyName(o.keyAttack), keyName(o.keyUse), keyName(o.keyPickItem)};
+		}));
 		return new Page("controls", Zocular.id("icon/controls"), List.copyOf(entries));
 	}
 

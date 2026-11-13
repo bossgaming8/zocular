@@ -67,11 +67,11 @@
 	"zocular.heading.controls.keys": "Keys",
 	"zocular.heading.controls.freecam": "Mouse in freecam",
 
-	"zocular.note.path.how_to": "Open freecam, fly to where the shot should start and press Attack to drop a keyframe. Repeat for each point along the way, then press Use to play the path. Pick Block removes the last keyframe; Sneak + Pick Block clears them all. Turn on Play while it runs to control your player during the shot.",
-	"zocular.note.camera.overhead": "Overhead view (-): a mouse cursor shows; click what it points at to mine, place blocks, open chests or hit mobs, within your normal reach. WASD moves you around the screen, [ and ] turn the camera, and holding Zoom while scrolling raises or lowers it. League mode (=) is the same camera with League controls: right-click to walk somewhere, left-click to mine or hit, Shift + right-click to build, R to switch camera and the middle button to bring a Free camera back.",
+	"zocular.note.path.how_to": "Open freecam, fly to where the shot should start and press %1$s to drop a keyframe. Repeat for each point along the way, then press %2$s to play the path. %3$s removes the last keyframe; %4$s + %3$s clears them all. Turn on Play while it runs to control your player during the shot.",
+	"zocular.note.camera.overhead": "Press %1$s to switch the overhead view on or off. A mouse cursor shows: click what it points at to mine, place blocks, open chests or hit mobs, as long as it is within your normal reach (the block outline shows when it is). %2$s move you up, left, down and right on the screen. %3$s and %4$s turn the camera; hold %5$s and scroll to raise or lower it. League mode (%6$s) is the same camera with League controls: right-click to walk somewhere, left-click to mine or hit, %7$s + right-click to build, %8$s to switch camera and the middle button to bring a Free camera back.",
 	"zocular.note.camera.roll": "Roll only applies in freecam and cinematic mode, and resets when you leave them.",
 	"zocular.note.hud.layout": "In the editor, drag an element to move it and right-click it to put it back. You can also open it with /zocular hud.",
-	"zocular.note.controls.freecam": "While freecam is on, Attack adds a camera path keyframe, Use plays or stops the path, Pick Block removes the last keyframe and the scroll wheel changes your flying speed.",
+	"zocular.note.controls.freecam": "While freecam is on, %1$s adds a camera path keyframe, %2$s plays or stops the path, %3$s removes the last keyframe and the scroll wheel changes your flying speed.",
 
 	"zocular.option.zoom.enabled": "Enable zoom",
 	"zocular.option.zoom.enabled.desc": "Turn this off if you use a different zoom mod and only want Zocular's cameras.",
