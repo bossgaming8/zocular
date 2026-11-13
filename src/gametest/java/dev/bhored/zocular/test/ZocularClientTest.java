@@ -9,6 +9,7 @@ import dev.bhored.zocular.config.Settings;
 import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.gui.HudEditorScreen;
 import dev.bhored.zocular.gui.SettingsScreen;
+import dev.bhored.zocular.hud.Splash;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -273,8 +274,12 @@ public final class ZocularClientTest implements FabricClientGameTest {
 		BlockPos gold = new BlockPos(2, -60, 20);
 
 		input.pressKey(Keybinds.OVERHEAD);
-		context.waitTicks(30);
+		context.waitTicks(16);
 		check(CameraControl.get().mode() == CameraControl.Mode.OVERHEAD, "the overhead view should be on");
+		check(Splash.isShowing(), "the Zocular title should show when the overhead view switches on");
+		context.takeScreenshot("overhead-splash");
+		context.waitTicks(40);
+		check(!Splash.isShowing(), "the title should be gone after a couple of seconds");
 		check(!context.computeOnClient(minecraft -> minecraft.mouseHandler.isMouseGrabbed()), "the cursor should be free");
 
 		double[] onGold = project(context, Vec3.atCenterOf(gold).add(0.0, 0.5, 0.0));

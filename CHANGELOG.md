@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- New overhead view (<kbd>U</kbd>), like a strategy game: the camera hangs above you at a fixed angle and a mouse cursor appears. Click what the cursor is on to mine, build, open chests or hit mobs, within your normal reach (the block outline shows when you can). <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> move you up, left, down and right on the screen, <kbd>[</kbd> and <kbd>]</kbd> turn the camera, and holding Zoom while scrolling raises or lowers it. Height, angle and lens are under Camera > Overhead view.
+- New overhead view (<kbd>U</kbd>), like a strategy game: the camera hangs above you at a fixed angle and a mouse cursor appears. Click what the cursor is on to mine, build, open chests or hit mobs, within your normal reach (the block outline shows when you can). <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> move you up, left, down and right on the screen, <kbd>[</kbd> and <kbd>]</kbd> turn the camera, and holding Zoom while scrolling raises or lowers it. Height, angle and lens are under Camera > Overhead view. The new Zocular title shows for a moment when it switches on (Show the title turns that off).
+- New blue Zocular title and icon.
 - Far third-person view is back: in F5, press Zoom (<kbd>C</kbd>) to swing the camera far out behind you, scroll to take it as far as 96 blocks (up to 256 in the settings) or back in, and press Zoom again to come back. You keep playing normally the whole time, and fog is pushed out with the camera so the world doesn't vanish. Turn it off under Camera > Zoom key pulls the camera back.
 - Camera paths can now play while you keep playing: turn on Camera Path > Play while it runs, set your keyframes in freecam and press Use. During the shot, your movement, mouse and clicks go to your player, so you can walk, build or fight on camera. Freecam (<kbd>F4</kbd>) stops the shot, and when it ends the camera comes back to you.
 

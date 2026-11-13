@@ -7,6 +7,7 @@ import dev.bhored.zocular.config.ZocularConfig;
 import dev.bhored.zocular.config.ZocularConfig.PanelMode;
 import dev.bhored.zocular.config.ZocularConfig.ShaderMode;
 import dev.bhored.zocular.hud.Notices;
+import dev.bhored.zocular.hud.Splash;
 import dev.bhored.zocular.util.Keys;
 import dev.bhored.zocular.util.Motion;
 import java.util.Locale;
@@ -333,7 +334,12 @@ public final class CameraControl {
 		overhead.start(minecraft.player);
 		mode = Mode.OVERHEAD;
 		minecraft.mouseHandler.releaseMouse();
-		Notices.show(Component.translatable("zocular.notice.overhead_on"));
+		if (ZocularConfig.get().overhead.splash) {
+			Splash.show(Component.translatable("zocular.splash.overhead"),
+				Component.translatable("zocular.splash.overhead.hint", Keybinds.OVERHEAD.getTranslatedKeyMessage()));
+		} else {
+			Notices.show(Component.translatable("zocular.notice.overhead_on"));
+		}
 	}
 
 	private void endOverhead(Minecraft minecraft) {
@@ -342,6 +348,7 @@ public final class CameraControl {
 		}
 		release(minecraft);
 		mode = Mode.NONE;
+		Splash.hide();
 		if (minecraft.gui.screen() == null) {
 			minecraft.mouseHandler.grabMouse();
 		}

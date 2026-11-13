@@ -82,6 +82,7 @@ public final class Overlay {
 			}
 			timeline(graphics, path.fraction(), markers);
 		}
+		Splash.draw(graphics, font);
 		Component message = Notices.current();
 		if (message != null) {
 			notice(graphics, font, message, Notices.alpha());

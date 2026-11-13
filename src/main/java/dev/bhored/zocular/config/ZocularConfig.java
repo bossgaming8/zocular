@@ -150,6 +150,7 @@ public final class ZocularConfig {
 		public float distance = 18.0F;
 		public float angle = 55.0F;
 		public float fov = 50.0F;
+		public boolean splash = true;
 	}
 
 	public static final class Roll {
